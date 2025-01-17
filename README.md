@@ -2,6 +2,7 @@
 
 Wrap [uint256](https://github.com/holiman/uint256) fixed size 256-bit math library to allow perform with negative number.
 
+Taken from [https://github.com/linhbkhn95/int256](https://github.com/linhbkhn95/int256) but with my own additions that I find usefull.
 # Example usage:
 
 ### Expanding a number to 18 decimals

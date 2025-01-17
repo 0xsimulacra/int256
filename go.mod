@@ -1,5 +1,7 @@
-module github.com/linhbkhn95/int256
+module github.com/0xsimulacra/int256
 
-go 1.19
+go 1.23
 
-require github.com/holiman/uint256 v1.2.4
+toolchain go1.23.5
+
+require github.com/holiman/uint256 v1.3.2
