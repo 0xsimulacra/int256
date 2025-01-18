@@ -43,16 +43,16 @@ func New() *Int {
 
 // SetInt64 sets z to x and returns z.
 func (z *Int) SetInt64(x int64) *Int {
-    neg := false
-    if x < 0 {
-        neg = true
-        x = -x
-    }
     if z.abs == nil {
         panic("abs is nil")
     }
+    if x >= 0 {
+        z.neg = false
+    } else {
+        z.neg = true
+        x = -x
+    }
     z.abs = z.abs.SetUint64(uint64(x))
-    z.neg = neg
     return z
 }
 
