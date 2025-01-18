@@ -16,8 +16,8 @@ type Int struct {
 
 // Clone method creates a deep copy of Int
 func (z *Int) Clone() *Int {
-    absCopy := z.abs.Clone() // create a new uint256.Int and set its value to the value of z.abs
-    return &Int{abs: absCopy, neg: z.neg}
+    // create a new uint256.Int and set its value to the value of z.abs
+    return &Int{abs: z.abs.Clone(), neg: z.neg}
 }
 
 // Sign returns:
