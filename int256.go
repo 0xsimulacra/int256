@@ -419,6 +419,15 @@ func (z *Int) Signed(a, b *Int) *Int {
     return z
 }
 
+// Relu function (x > 0 ? x : 0)
+func (z *Int) Relu() *Int {
+    x := NewInt(0)
+    if !z.neg {
+        x.abs = z.abs.Clone()
+    }
+    return x
+}
+
 // CondRef return either x or y based on the condition c (c ? x : y)
 func CondRef(c bool, x, y *Int) *Int {
     if c {
