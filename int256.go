@@ -222,6 +222,11 @@ func (z *Int) Rem(x, y *Int) *Int {
     return z
 }
 
+// IsZero returns true if z == 0
+func (z *Int) IsZero() bool {
+    return z.abs.IsZero()
+}
+
 // Cmp compares x and y and returns:
 //
 //	-1 if x <  y
