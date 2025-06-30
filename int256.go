@@ -26,7 +26,7 @@ func (z *Int) Clone() *Int {
 //	 0 if x == 0
 //	+1 if x >  0
 func (z *Int) Sign() int {
-    if len(z.abs) == 0 {
+    if z.abs == nil || z.abs.IsZero() {
         return 0
     }
     if z.neg {
