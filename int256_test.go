@@ -645,7 +645,7 @@ func TestInt_Rsh(t *testing.T) {
 	}
 }
 
-func TestInt_RshMatchesBigInt(t *testing.T) {
+func int257TestValues() []*Int {
 	values := []*Int{
 		NewInt(0),
 		NewInt(1),
@@ -671,6 +671,12 @@ func TestInt_RshMatchesBigInt(t *testing.T) {
 	maxUint := new(big.Int).Sub(new(big.Int).Lsh(big.NewInt(1), 256), big.NewInt(1))
 	values = append(values, MustFromBig(maxUint))
 	values = append(values, MustFromBig(new(big.Int).Neg(maxUint)))
+
+	return values
+}
+
+func TestInt_RshMatchesBigInt(t *testing.T) {
+	values := int257TestValues()
 
 	shifts := []uint{0, 1, 2, 3, 63, 64, 65, 127, 128, 129, 191, 192, 193, 254, 255, 256, 257, 300}
 
@@ -1079,6 +1085,34 @@ func TestInt_Lsh(t *testing.T) {
 	}
 }
 
+func TestInt_LshMatchesBigInt(t *testing.T) {
+	values := int257TestValues()
+	shifts := []uint{0, 1, 2, 3, 63, 64, 65, 127, 128, 129, 191, 192, 193, 254, 255, 256, 257, 300}
+
+	for _, x := range values {
+		xBig := x.ToBig()
+		for _, shift := range shifts {
+			if bitLen := x.abs.BitLen(); bitLen != 0 && shift > uint(256-bitLen) {
+				continue
+			}
+			t.Run(fmt.Sprintf("%s<<%d", xBig, shift), func(t *testing.T) {
+				want := MustFromBig(new(big.Int).Lsh(new(big.Int).Set(xBig), shift))
+
+				got := new(Int).Lsh(x, shift)
+				if !reflect.DeepEqual(got, want) {
+					t.Fatalf("Lsh() = %v, want %v", got, want)
+				}
+
+				gotAlias := x.Clone()
+				gotAlias.Lsh(gotAlias, shift)
+				if !reflect.DeepEqual(gotAlias, want) {
+					t.Fatalf("alias Lsh() = %v, want %v", gotAlias, want)
+				}
+			})
+		}
+	}
+}
+
 func TestInt_Or(t *testing.T) {
 	type fields struct {
 		abs uint256.Int
@@ -1279,6 +1313,71 @@ func TestInt_And(t *testing.T) {
 				t.Errorf("Int.And() = %v, want %v", got, tt.want)
 			}
 		})
+	}
+}
+
+func TestInt_BitwiseMatchesBigInt(t *testing.T) {
+	values := int257TestValues()
+
+	for _, x := range values {
+		xBig := x.ToBig()
+		for _, y := range values {
+			yBig := y.ToBig()
+
+			t.Run(fmt.Sprintf("%s|%s", xBig, yBig), func(t *testing.T) {
+				want, overflow := FromBig(new(big.Int).Or(new(big.Int).Set(xBig), yBig))
+				if overflow {
+					if !causesPanic(func() { new(Int).Or(x, y) }) {
+						t.Fatalf("Or() should panic on overflow")
+					}
+					return
+				}
+
+				got := new(Int).Or(x, y)
+				if !reflect.DeepEqual(got, want) {
+					t.Fatalf("Or() = %v, want %v", got, want)
+				}
+
+				gotAliasX := x.Clone()
+				gotAliasX.Or(gotAliasX, y)
+				if !reflect.DeepEqual(gotAliasX, want) {
+					t.Fatalf("alias x Or() = %v, want %v", gotAliasX, want)
+				}
+
+				gotAliasY := y.Clone()
+				gotAliasY.Or(x, gotAliasY)
+				if !reflect.DeepEqual(gotAliasY, want) {
+					t.Fatalf("alias y Or() = %v, want %v", gotAliasY, want)
+				}
+			})
+
+			t.Run(fmt.Sprintf("%s&%s", xBig, yBig), func(t *testing.T) {
+				want, overflow := FromBig(new(big.Int).And(new(big.Int).Set(xBig), yBig))
+				if overflow {
+					if !causesPanic(func() { new(Int).And(x, y) }) {
+						t.Fatalf("And() should panic on overflow")
+					}
+					return
+				}
+
+				got := new(Int).And(x, y)
+				if !reflect.DeepEqual(got, want) {
+					t.Fatalf("And() = %v, want %v", got, want)
+				}
+
+				gotAliasX := x.Clone()
+				gotAliasX.And(gotAliasX, y)
+				if !reflect.DeepEqual(gotAliasX, want) {
+					t.Fatalf("alias x And() = %v, want %v", gotAliasX, want)
+				}
+
+				gotAliasY := y.Clone()
+				gotAliasY.And(x, gotAliasY)
+				if !reflect.DeepEqual(gotAliasY, want) {
+					t.Fatalf("alias y And() = %v, want %v", gotAliasY, want)
+				}
+			})
+		}
 	}
 }
 

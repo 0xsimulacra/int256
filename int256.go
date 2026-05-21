@@ -193,7 +193,7 @@ func (z *Int) Sqrt(x *Int) *Int {
 func (z *Int) Rsh(x *Int, n uint) *Int {
 	if !x.neg {
 		z.abs.Rsh(&x.abs, n)
-		z.neg = x.neg
+		z.neg = false
 		return z
 	}
 
@@ -225,9 +225,7 @@ func hasLowerBits(x *uint256.Int, n uint) bool {
 	if bits == 0 {
 		return false
 	}
-
 	mask := (uint64(1) << bits) - 1
-
 	return x[words]&mask != 0
 }
 
@@ -342,7 +340,7 @@ func (z *Int) Lsh(x *Int, n uint) *Int {
 		panic("overflow")
 	}
 	z.abs.Lsh(&x.abs, n)
-	z.neg = x.neg
+	z.neg = !z.abs.IsZero() && x.neg
 	return z
 }
 
@@ -351,9 +349,11 @@ func (z *Int) Or(x, y *Int) *Int {
 	if x.neg == y.neg {
 		if x.neg {
 			// (-x) | (-y) == ^(x-1) | ^(y-1) == ^((x-1) & (y-1)) == -(((x-1) & (y-1)) + 1)
-			x1 := new(uint256.Int).Sub(&x.abs, one)
-			y1 := new(uint256.Int).Sub(&y.abs, one)
-			z.abs.Add(z.abs.And(x1, y1), one)
+			var x1, y1 uint256.Int
+			x1.Sub(&x.abs, one)
+			y1.Sub(&y.abs, one)
+			z.abs.And(&x1, &y1)
+			z.abs.Add(&z.abs, one)
 			z.neg = true // z cannot be zero if x and y are negative
 			return z
 		}
@@ -370,8 +370,11 @@ func (z *Int) Or(x, y *Int) *Int {
 	}
 
 	// x | (-y) == x | ^(y-1) == ^((y-1) &^ x) == -(^((y-1) &^ x) + 1)
-	y1 := new(uint256.Int).Sub(&y.abs, one)
-	z.abs.Add(z.abs.And(y1, new(uint256.Int).Xor(&x.abs, maxUint256)), one)
+	var y1, notX uint256.Int
+	y1.Sub(&y.abs, one)
+	notX.Xor(&x.abs, maxUint256)
+	z.abs.And(&y1, &notX)
+	z.abs.Add(&z.abs, one)
 	z.neg = true // z cannot be zero if one of x or y is negative
 
 	return z
@@ -382,9 +385,14 @@ func (z *Int) And(x, y *Int) *Int {
 	if x.neg == y.neg {
 		if x.neg {
 			// (-x) & (-y) == ^(x-1) & ^(y-1) == ^((x-1) | (y-1)) == -(((x-1) | (y-1)) + 1)
-			x1 := new(uint256.Int).Sub(&x.abs, one)
-			y1 := new(uint256.Int).Sub(&y.abs, one)
-			z.abs.Add(z.abs.Or(x1, y1), one)
+			var x1, y1 uint256.Int
+			x1.Sub(&x.abs, one)
+			y1.Sub(&y.abs, one)
+			z.abs.Or(&x1, &y1)
+			if z.abs.Eq(maxUint256) {
+				panic("overflow")
+			}
+			z.abs.Add(&z.abs, one)
 			z.neg = true // z cannot be zero if x and y are negative
 			return z
 		}
@@ -401,8 +409,10 @@ func (z *Int) And(x, y *Int) *Int {
 	}
 
 	// x & (-y) == x & ^(y-1) == x &^ (y-1)
-	y1 := new(uint256.Int).Sub(&y.abs, one)
-	z.abs.And(&x.abs, new(uint256.Int).Xor(y1, maxUint256))
+	var y1, notY1 uint256.Int
+	y1.Sub(&y.abs, one)
+	notY1.Xor(&y1, maxUint256)
+	z.abs.And(&x.abs, &notY1)
 	z.neg = false
 
 	return z
