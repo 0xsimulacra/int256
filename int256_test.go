@@ -1,6 +1,7 @@
 package int256
 
 import (
+	"fmt"
 	"math/big"
 	"reflect"
 	"testing"
@@ -10,7 +11,7 @@ import (
 
 func TestInt_Add(t *testing.T) {
 	type fields struct {
-		abs *uint256.Int
+		abs uint256.Int
 		neg bool
 	}
 	type args struct {
@@ -27,82 +28,82 @@ func TestInt_Add(t *testing.T) {
 		{
 			name: "Should return correct when add two positive numbers",
 			fields: fields{
-				abs: uint256.NewInt(0),
+				abs: *uint256.NewInt(0),
 				neg: false,
 			},
 			args: args{
 				x: &Int{
-					abs: uint256.NewInt(10),
+					abs: *uint256.NewInt(10),
 				},
 				y: &Int{
-					abs: uint256.NewInt(7),
+					abs: *uint256.NewInt(7),
 				},
 			},
 			want: &Int{
-				abs: uint256.NewInt(17),
+				abs: *uint256.NewInt(17),
 				neg: false,
 			},
 		},
 		{
 			name: "Should return correct when add two negative numbers",
 			fields: fields{
-				abs: uint256.NewInt(0),
+				abs: *uint256.NewInt(0),
 				neg: false,
 			},
 			args: args{
 				x: &Int{
-					abs: uint256.NewInt(10),
+					abs: *uint256.NewInt(10),
 					neg: true,
 				},
 				y: &Int{
-					abs: uint256.NewInt(7),
+					abs: *uint256.NewInt(7),
 					neg: true,
 				},
 			},
 			want: &Int{
-				abs: uint256.NewInt(17),
+				abs: *uint256.NewInt(17),
 				neg: true,
 			},
 		},
 		{
 			name: "Should return correct when add two numbers with a is negative, b is positive and |a|>|b|",
 			fields: fields{
-				abs: uint256.NewInt(0),
+				abs: *uint256.NewInt(0),
 				neg: false,
 			},
 			args: args{
 				x: &Int{
-					abs: uint256.NewInt(10),
+					abs: *uint256.NewInt(10),
 					neg: true,
 				},
 				y: &Int{
-					abs: uint256.NewInt(7),
+					abs: *uint256.NewInt(7),
 					neg: false,
 				},
 			},
 			want: &Int{
-				abs: uint256.NewInt(3),
+				abs: *uint256.NewInt(3),
 				neg: true,
 			},
 		},
 		{
 			name: "Should return correct when add two numbers with a is negative, b is positive and |a|<|b|",
 			fields: fields{
-				abs: uint256.NewInt(0),
+				abs: *uint256.NewInt(0),
 				neg: false,
 			},
 			args: args{
 				x: &Int{
-					abs: uint256.NewInt(10),
+					abs: *uint256.NewInt(10),
 					neg: false,
 				},
 				y: &Int{
-					abs: uint256.NewInt(7),
+					abs: *uint256.NewInt(7),
 					neg: true,
 				},
 			},
 			want: &Int{
-				abs: uint256.NewInt(3),
+				abs: *uint256.NewInt(3),
 				neg: false,
 			},
 		},
@@ -122,7 +123,7 @@ func TestInt_Add(t *testing.T) {
 
 func TestInt_Sub(t *testing.T) {
 	type fields struct {
-		abs *uint256.Int
+		abs uint256.Int
 		neg bool
 	}
 	type args struct {
@@ -139,122 +140,122 @@ func TestInt_Sub(t *testing.T) {
 		{
 			name: "Should return correct when sub two positive numbers |a|>|b|",
 			fields: fields{
-				abs: uint256.NewInt(0),
+				abs: *uint256.NewInt(0),
 				neg: false,
 			},
 			args: args{
 				x: &Int{
-					abs: uint256.NewInt(10),
+					abs: *uint256.NewInt(10),
 				},
 				y: &Int{
-					abs: uint256.NewInt(7),
+					abs: *uint256.NewInt(7),
 				},
 			},
 			want: &Int{
-				abs: uint256.NewInt(3),
+				abs: *uint256.NewInt(3),
 				neg: false,
 			},
 		},
 		{
 			name: "Should return correct when sub two positive numbers |a|<|b|",
 			fields: fields{
-				abs: uint256.NewInt(0),
+				abs: *uint256.NewInt(0),
 				neg: false,
 			},
 			args: args{
 				x: &Int{
-					abs: uint256.NewInt(7),
+					abs: *uint256.NewInt(7),
 				},
 				y: &Int{
-					abs: uint256.NewInt(10),
+					abs: *uint256.NewInt(10),
 				},
 			},
 			want: &Int{
-				abs: uint256.NewInt(3),
+				abs: *uint256.NewInt(3),
 				neg: true,
 			},
 		},
 		{
 			name: "Should return correct when add two negative numbers |a|>|b|",
 			fields: fields{
-				abs: uint256.NewInt(0),
+				abs: *uint256.NewInt(0),
 				neg: false,
 			},
 			args: args{
 				x: &Int{
-					abs: uint256.NewInt(10),
+					abs: *uint256.NewInt(10),
 					neg: true,
 				},
 				y: &Int{
-					abs: uint256.NewInt(7),
+					abs: *uint256.NewInt(7),
 					neg: true,
 				},
 			},
 			want: &Int{
-				abs: uint256.NewInt(3),
+				abs: *uint256.NewInt(3),
 				neg: true,
 			},
 		},
 		{
 			name: "Should return correct when add two negative numbers |a|<|b|",
 			fields: fields{
-				abs: uint256.NewInt(0),
+				abs: *uint256.NewInt(0),
 				neg: false,
 			},
 			args: args{
 				x: &Int{
-					abs: uint256.NewInt(7),
+					abs: *uint256.NewInt(7),
 					neg: true,
 				},
 				y: &Int{
-					abs: uint256.NewInt(10),
+					abs: *uint256.NewInt(10),
 					neg: true,
 				},
 			},
 			want: &Int{
-				abs: uint256.NewInt(3),
+				abs: *uint256.NewInt(3),
 				neg: false,
 			},
 		},
 		{
 			name: "Should return correct when add two numbers with a is negative, b is positive and |a|>|b|",
 			fields: fields{
-				abs: uint256.NewInt(0),
+				abs: *uint256.NewInt(0),
 				neg: false,
 			},
 			args: args{
 				x: &Int{
-					abs: uint256.NewInt(10),
+					abs: *uint256.NewInt(10),
 					neg: true,
 				},
 				y: &Int{
-					abs: uint256.NewInt(7),
+					abs: *uint256.NewInt(7),
 					neg: false,
 				},
 			},
 			want: &Int{
-				abs: uint256.NewInt(17),
+				abs: *uint256.NewInt(17),
 				neg: true,
 			},
 		},
 		{
 			name: "Should return correct when add two numbers with a is negative, b is positive and |a|<|b|",
 			fields: fields{
-				abs: uint256.NewInt(0),
+				abs: *uint256.NewInt(0),
 				neg: false,
 			},
 			args: args{
 				x: &Int{
-					abs: uint256.NewInt(10),
+					abs: *uint256.NewInt(10),
 					neg: false,
 				},
 				y: &Int{
-					abs: uint256.NewInt(7),
+					abs: *uint256.NewInt(7),
 					neg: true,
 				},
 			},
 			want: &Int{
-				abs: uint256.NewInt(17),
+				abs: *uint256.NewInt(17),
 				neg: false,
 			},
 		},
@@ -274,7 +275,7 @@ func TestInt_Sub(t *testing.T) {
 
 func TestInt_Mul(t *testing.T) {
 	type fields struct {
-		abs *uint256.Int
+		abs uint256.Int
 		neg bool
 	}
 	type args struct {
@@ -291,60 +292,60 @@ func TestInt_Mul(t *testing.T) {
 		{
 			name: "Should return correct value when multiple for two positive numbers",
 			fields: fields{
-				abs: uint256.NewInt(0),
+				abs: *uint256.NewInt(0),
 				neg: false,
 			},
 			args: args{
 				x: &Int{
-					abs: uint256.NewInt(3),
+					abs: *uint256.NewInt(3),
 				},
 				y: &Int{
-					abs: uint256.NewInt(5),
+					abs: *uint256.NewInt(5),
 				},
 			},
 			want: &Int{
-				abs: uint256.NewInt(15),
+				abs: *uint256.NewInt(15),
 			},
 		},
 		{
 			name: "Should return correct value when multiple for two negative numbers",
 			fields: fields{
-				abs: uint256.NewInt(0),
+				abs: *uint256.NewInt(0),
 				neg: false,
 			},
 			args: args{
 				x: &Int{
-					abs: uint256.NewInt(3),
+					abs: *uint256.NewInt(3),
 					neg: true,
 				},
 				y: &Int{
-					abs: uint256.NewInt(5),
+					abs: *uint256.NewInt(5),
 					neg: true,
 				},
 			},
 			want: &Int{
-				abs: uint256.NewInt(15),
+				abs: *uint256.NewInt(15),
 				neg: false,
 			},
 		},
 		{
 			name: "Should return correct value when multiple for a negative number and a positive number",
 			fields: fields{
-				abs: uint256.NewInt(0),
+				abs: *uint256.NewInt(0),
 				neg: false,
 			},
 			args: args{
 				x: &Int{
-					abs: uint256.NewInt(3),
+					abs: *uint256.NewInt(3),
 					neg: true,
 				},
 				y: &Int{
-					abs: uint256.NewInt(5),
+					abs: *uint256.NewInt(5),
 					neg: false,
 				},
 			},
 			want: &Int{
-				abs: uint256.NewInt(15),
+				abs: *uint256.NewInt(15),
 				neg: true,
 			},
 		},
@@ -379,7 +380,7 @@ func TestInt_MulPanic(t *testing.T) {
 
 func TestInt_Sqrt(t *testing.T) {
 	type fields struct {
-		abs *uint256.Int
+		abs uint256.Int
 		neg bool
 	}
 	type args struct {
@@ -395,16 +396,16 @@ func TestInt_Sqrt(t *testing.T) {
 		{
 			name: "Should return correct value when performing for positive number",
 			fields: fields{
-				abs: uint256.NewInt(0),
+				abs: *uint256.NewInt(0),
 				neg: false,
 			},
 			args: args{
 				x: &Int{
-					abs: uint256.NewInt(9),
+					abs: *uint256.NewInt(9),
 				},
 			},
 			want: &Int{
-				abs: uint256.NewInt(3),
+				abs: *uint256.NewInt(3),
 			},
 		},
 	}
@@ -423,7 +424,7 @@ func TestInt_Sqrt(t *testing.T) {
 
 func TestInt_SetString(t *testing.T) {
 	type fields struct {
-		abs *uint256.Int
+		abs uint256.Int
 		neg bool
 	}
 	type args struct {
@@ -446,14 +447,14 @@ func TestInt_SetString(t *testing.T) {
 		{
 			name: "Should return correct value when parsing correct string value",
 			fields: fields{
-				abs: uint256.NewInt(0),
+				abs: *uint256.NewInt(0),
 				neg: false,
 			},
 			args: args{
 				s: "10",
 			},
 			want: &Int{
-				abs: uint256.NewInt(10),
+				abs: *uint256.NewInt(10),
 				neg: false,
 			},
 			wantErr: false,
@@ -461,14 +462,14 @@ func TestInt_SetString(t *testing.T) {
 		{
 			name: "Should return correct value when parsing correct string value",
 			fields: fields{
-				abs: uint256.NewInt(0),
+				abs: *uint256.NewInt(0),
 				neg: false,
 			},
 			args: args{
 				s: "-10",
 			},
 			want: &Int{
-				abs: uint256.NewInt(10),
+				abs: *uint256.NewInt(10),
 				neg: true,
 			},
 			wantErr: false,
@@ -476,7 +477,7 @@ func TestInt_SetString(t *testing.T) {
 		{
 			name: "Should return error value when parsing incorrect string value",
 			fields: fields{
-				abs: uint256.NewInt(0),
+				abs: *uint256.NewInt(0),
 				neg: false,
 			},
 			args: args{
@@ -488,7 +489,7 @@ func TestInt_SetString(t *testing.T) {
 		{
 			name: "Should return error value when parsing correct string value",
 			fields: fields{
-				abs: uint256.NewInt(0),
+				abs: *uint256.NewInt(0),
 				neg: false,
 			},
 			args: args{
@@ -500,7 +501,7 @@ func TestInt_SetString(t *testing.T) {
 		{
 			name: "Should return error value when parsing correct string value",
 			fields: fields{
-				abs: uint256.NewInt(0),
+				abs: *uint256.NewInt(0),
 				neg: false,
 			},
 			args: args{
@@ -530,7 +531,7 @@ func TestInt_SetString(t *testing.T) {
 
 func TestInt_SetInt64(t *testing.T) {
 	type fields struct {
-		abs *uint256.Int
+		abs uint256.Int
 		neg bool
 	}
 	type args struct {
@@ -546,28 +547,28 @@ func TestInt_SetInt64(t *testing.T) {
 		{
 			name: "Should return correct value when ",
 			fields: fields{
-				abs: new(uint256.Int),
+				abs: uint256.Int{},
 				neg: false,
 			},
 			args: args{
 				x: 24,
 			},
 			want: &Int{
-				abs: uint256.NewInt(24),
+				abs: *uint256.NewInt(24),
 				neg: false,
 			},
 		},
 		{
 			name: "Should return correct value when ",
 			fields: fields{
-				abs: new(uint256.Int),
+				abs: uint256.Int{},
 				neg: false,
 			},
 			args: args{
 				x: -24,
 			},
 			want: &Int{
-				abs: uint256.NewInt(24),
+				abs: *uint256.NewInt(24),
 				neg: true,
 			},
 		},
@@ -587,7 +588,7 @@ func TestInt_SetInt64(t *testing.T) {
 
 func TestInt_Rsh(t *testing.T) {
 	type fields struct {
-		abs *uint256.Int
+		abs uint256.Int
 		neg bool
 	}
 	type args struct {
@@ -604,7 +605,7 @@ func TestInt_Rsh(t *testing.T) {
 		{
 			name: "Should return correct value when perform positive number",
 			fields: fields{
-				abs: new(uint256.Int),
+				abs: uint256.Int{},
 				neg: false,
 			},
 			args: args{
@@ -616,7 +617,7 @@ func TestInt_Rsh(t *testing.T) {
 		{
 			name: "Should return correct value when perform negative number",
 			fields: fields{
-				abs: new(uint256.Int),
+				abs: uint256.Int{},
 				neg: false,
 			},
 			args: args{
@@ -639,9 +640,40 @@ func TestInt_Rsh(t *testing.T) {
 	}
 }
 
+func TestInt_RshMatchesBigInt(t *testing.T) {
+	values := []string{
+		"0",
+		"1",
+		"-1",
+		"2",
+		"-2",
+		"3",
+		"-3",
+		"10",
+		"-10",
+		"340282366920938463463374607431768211455",
+		"-340282366920938463463374607431768211455",
+	}
+	shifts := []uint{0, 1, 2, 63, 64, 65, 127, 128, 129, 191, 192, 193, 255, 256, 300}
+
+	for _, value := range values {
+		x := MustFromDecimal(value)
+		xBig := x.ToBig()
+		for _, shift := range shifts {
+			t.Run(fmt.Sprintf("%s>>%d", value, shift), func(t *testing.T) {
+				got := new(Int).Rsh(x, shift)
+				want := MustFromBig(new(big.Int).Rsh(new(big.Int).Set(xBig), shift))
+				if !reflect.DeepEqual(got, want) {
+					t.Fatalf("Rsh() = %v, want %v", got, want)
+				}
+			})
+		}
+	}
+}
+
 func TestInt_Rem(t *testing.T) {
 	type fields struct {
-		abs *uint256.Int
+		abs uint256.Int
 		neg bool
 	}
 	type args struct {
@@ -658,34 +690,34 @@ func TestInt_Rem(t *testing.T) {
 		{
 			name: "Should return correct value when performing for two positive numbers",
 			fields: fields{
-				abs: new(uint256.Int),
+				abs: uint256.Int{},
 				neg: false,
 			},
 			args: args{
 				x: &Int{
-					abs: uint256.NewInt(10),
+					abs: *uint256.NewInt(10),
 				},
 				y: &Int{
-					abs: uint256.NewInt(3),
+					abs: *uint256.NewInt(3),
 				},
 			},
 			want: &Int{
-				abs: uint256.NewInt(1),
+				abs: *uint256.NewInt(1),
 			},
 		},
 		{
 			name: "Should return correct value when performing for two negative numbers",
 			fields: fields{
-				abs: new(uint256.Int),
+				abs: uint256.Int{},
 				neg: false,
 			},
 			args: args{
 				x: &Int{
-					abs: uint256.NewInt(10),
+					abs: *uint256.NewInt(10),
 					neg: true,
 				},
 				y: &Int{
-					abs: uint256.NewInt(3),
+					abs: *uint256.NewInt(3),
 					neg: true,
 				},
 			},
@@ -694,16 +726,16 @@ func TestInt_Rem(t *testing.T) {
 		{
 			name: "Should return correct value when performing for a negative and a numbers",
 			fields: fields{
-				abs: new(uint256.Int),
+				abs: uint256.Int{},
 				neg: false,
 			},
 			args: args{
 				x: &Int{
-					abs: uint256.NewInt(10),
+					abs: *uint256.NewInt(10),
 					neg: false,
 				},
 				y: &Int{
-					abs: uint256.NewInt(3),
+					abs: *uint256.NewInt(3),
 					neg: true,
 				},
 			},
@@ -712,16 +744,16 @@ func TestInt_Rem(t *testing.T) {
 		{
 			name: "Should return correct value when performing for a negative and a numbers",
 			fields: fields{
-				abs: new(uint256.Int),
+				abs: uint256.Int{},
 				neg: false,
 			},
 			args: args{
 				x: &Int{
-					abs: uint256.NewInt(10),
+					abs: *uint256.NewInt(10),
 					neg: false,
 				},
 				y: &Int{
-					abs: uint256.NewInt(3),
+					abs: *uint256.NewInt(3),
 					neg: true,
 				},
 			},
@@ -743,7 +775,7 @@ func TestInt_Rem(t *testing.T) {
 
 func TestInt_Exp(t *testing.T) {
 	type fields struct {
-		abs *uint256.Int
+		abs uint256.Int
 		neg bool
 	}
 	type args struct {
@@ -761,20 +793,20 @@ func TestInt_Exp(t *testing.T) {
 		{
 			name: "Should return correct value when perform x,y,m is positive number",
 			fields: fields{
-				abs: new(uint256.Int),
+				abs: uint256.Int{},
 				neg: false,
 			},
 			args: args{
 				x: &Int{
-					abs: uint256.NewInt(10),
+					abs: *uint256.NewInt(10),
 					neg: false,
 				},
 				y: &Int{
-					abs: uint256.NewInt(3),
+					abs: *uint256.NewInt(3),
 					neg: false,
 				},
 				m: &Int{
-					abs: uint256.NewInt(3),
+					abs: *uint256.NewInt(3),
 					neg: false,
 				},
 			},
@@ -783,20 +815,20 @@ func TestInt_Exp(t *testing.T) {
 		{
 			name: "Should return correct value when perform x,y is positive number and m is negative",
 			fields: fields{
-				abs: new(uint256.Int),
+				abs: uint256.Int{},
 				neg: false,
 			},
 			args: args{
 				x: &Int{
-					abs: uint256.NewInt(10),
+					abs: *uint256.NewInt(10),
 					neg: false,
 				},
 				y: &Int{
-					abs: uint256.NewInt(3),
+					abs: *uint256.NewInt(3),
 					neg: false,
 				},
 				m: &Int{
-					abs: uint256.NewInt(3),
+					abs: *uint256.NewInt(3),
 					neg: true,
 				},
 			},
@@ -805,20 +837,20 @@ func TestInt_Exp(t *testing.T) {
 		{
 			name: "Should return correct value when perform x,y is positive number and m is negative",
 			fields: fields{
-				abs: new(uint256.Int),
+				abs: uint256.Int{},
 				neg: false,
 			},
 			args: args{
 				x: &Int{
-					abs: uint256.NewInt(10),
+					abs: *uint256.NewInt(10),
 					neg: false,
 				},
 				y: &Int{
-					abs: uint256.NewInt(3),
+					abs: *uint256.NewInt(3),
 					neg: true,
 				},
 				m: &Int{
-					abs: uint256.NewInt(3),
+					abs: *uint256.NewInt(3),
 					neg: false,
 				},
 			},
@@ -827,20 +859,20 @@ func TestInt_Exp(t *testing.T) {
 		{
 			name: "Should return correct value when perform x,y is positive number and m is negative",
 			fields: fields{
-				abs: new(uint256.Int),
+				abs: uint256.Int{},
 				neg: false,
 			},
 			args: args{
 				x: &Int{
-					abs: uint256.NewInt(10),
+					abs: *uint256.NewInt(10),
 					neg: true,
 				},
 				y: &Int{
-					abs: uint256.NewInt(3),
+					abs: *uint256.NewInt(3),
 					neg: false,
 				},
 				m: &Int{
-					abs: uint256.NewInt(3),
+					abs: *uint256.NewInt(3),
 					neg: false,
 				},
 			},
@@ -849,20 +881,20 @@ func TestInt_Exp(t *testing.T) {
 		{
 			name: "Should return correct value when perform x,y is positive number and m is negative",
 			fields: fields{
-				abs: new(uint256.Int),
+				abs: uint256.Int{},
 				neg: false,
 			},
 			args: args{
 				x: &Int{
-					abs: uint256.NewInt(10),
+					abs: *uint256.NewInt(10),
 					neg: true,
 				},
 				y: &Int{
-					abs: uint256.NewInt(3),
+					abs: *uint256.NewInt(3),
 					neg: true,
 				},
 				m: &Int{
-					abs: uint256.NewInt(3),
+					abs: *uint256.NewInt(3),
 					neg: false,
 				},
 			},
@@ -871,20 +903,20 @@ func TestInt_Exp(t *testing.T) {
 		{
 			name: "Should return correct value when perform x,y is positive number and m is negative",
 			fields: fields{
-				abs: new(uint256.Int),
+				abs: uint256.Int{},
 				neg: false,
 			},
 			args: args{
 				x: &Int{
-					abs: uint256.NewInt(10),
+					abs: *uint256.NewInt(10),
 					neg: true,
 				},
 				y: &Int{
-					abs: uint256.NewInt(3),
+					abs: *uint256.NewInt(3),
 					neg: false,
 				},
 				m: &Int{
-					abs: uint256.NewInt(3),
+					abs: *uint256.NewInt(3),
 					neg: true,
 				},
 			},
@@ -894,20 +926,20 @@ func TestInt_Exp(t *testing.T) {
 		{
 			name: "Should return correct value when perform x,y is positive number and m is negative",
 			fields: fields{
-				abs: new(uint256.Int),
+				abs: uint256.Int{},
 				neg: false,
 			},
 			args: args{
 				x: &Int{
-					abs: uint256.NewInt(10),
+					abs: *uint256.NewInt(10),
 					neg: false,
 				},
 				y: &Int{
-					abs: uint256.NewInt(3),
+					abs: *uint256.NewInt(3),
 					neg: true,
 				},
 				m: &Int{
-					abs: uint256.NewInt(3),
+					abs: *uint256.NewInt(3),
 					neg: true,
 				},
 			},
@@ -916,20 +948,20 @@ func TestInt_Exp(t *testing.T) {
 		{
 			name: "Should return correct value when perform x,y is positive number and m is negative",
 			fields: fields{
-				abs: new(uint256.Int),
+				abs: uint256.Int{},
 				neg: false,
 			},
 			args: args{
 				x: &Int{
-					abs: uint256.NewInt(10),
+					abs: *uint256.NewInt(10),
 					neg: true,
 				},
 				y: &Int{
-					abs: uint256.NewInt(3),
+					abs: *uint256.NewInt(3),
 					neg: true,
 				},
 				m: &Int{
-					abs: uint256.NewInt(3),
+					abs: *uint256.NewInt(3),
 					neg: true,
 				},
 			},
@@ -951,7 +983,7 @@ func TestInt_Exp(t *testing.T) {
 
 func TestInt_Lsh(t *testing.T) {
 	type fields struct {
-		abs *uint256.Int
+		abs uint256.Int
 		neg bool
 	}
 	type args struct {
@@ -968,12 +1000,12 @@ func TestInt_Lsh(t *testing.T) {
 		{
 			name: "Should return correct value",
 			fields: fields{
-				abs: new(uint256.Int),
+				abs: uint256.Int{},
 				neg: false,
 			},
 			args: args{
 				x: &Int{
-					abs: uint256.NewInt(10),
+					abs: *uint256.NewInt(10),
 					neg: false,
 				},
 				n: 3,
@@ -983,12 +1015,12 @@ func TestInt_Lsh(t *testing.T) {
 		{
 			name: "Should return correct value when process negative number and n is odd",
 			fields: fields{
-				abs: new(uint256.Int),
+				abs: uint256.Int{},
 				neg: false,
 			},
 			args: args{
 				x: &Int{
-					abs: uint256.NewInt(10),
+					abs: *uint256.NewInt(10),
 					neg: true,
 				},
 				n: 3,
@@ -998,12 +1030,12 @@ func TestInt_Lsh(t *testing.T) {
 		{
 			name: "Should return correct value when process negative number and n is even",
 			fields: fields{
-				abs: new(uint256.Int),
+				abs: uint256.Int{},
 				neg: false,
 			},
 			args: args{
 				x: &Int{
-					abs: uint256.NewInt(10),
+					abs: *uint256.NewInt(10),
 					neg: true,
 				},
 				n: 4,
@@ -1026,7 +1058,7 @@ func TestInt_Lsh(t *testing.T) {
 
 func TestInt_Or(t *testing.T) {
 	type fields struct {
-		abs *uint256.Int
+		abs uint256.Int
 		neg bool
 	}
 	type args struct {
@@ -1042,16 +1074,16 @@ func TestInt_Or(t *testing.T) {
 		{
 			name: "Should return correct value",
 			fields: fields{
-				abs: new(uint256.Int),
+				abs: uint256.Int{},
 				neg: false,
 			},
 			args: args{
 				x: &Int{
-					abs: uint256.NewInt(10),
+					abs: *uint256.NewInt(10),
 					neg: false,
 				},
 				y: &Int{
-					abs: uint256.NewInt(3),
+					abs: *uint256.NewInt(3),
 					neg: false,
 				},
 			},
@@ -1060,16 +1092,16 @@ func TestInt_Or(t *testing.T) {
 		{
 			name: "Should return correct value",
 			fields: fields{
-				abs: new(uint256.Int),
+				abs: uint256.Int{},
 				neg: false,
 			},
 			args: args{
 				x: &Int{
-					abs: uint256.NewInt(10),
+					abs: *uint256.NewInt(10),
 					neg: true,
 				},
 				y: &Int{
-					abs: uint256.NewInt(3),
+					abs: *uint256.NewInt(3),
 					neg: false,
 				},
 			},
@@ -1078,16 +1110,16 @@ func TestInt_Or(t *testing.T) {
 		{
 			name: "Should return correct value",
 			fields: fields{
-				abs: new(uint256.Int),
+				abs: uint256.Int{},
 				neg: false,
 			},
 			args: args{
 				x: &Int{
-					abs: uint256.NewInt(10),
+					abs: *uint256.NewInt(10),
 					neg: false,
 				},
 				y: &Int{
-					abs: uint256.NewInt(3),
+					abs: *uint256.NewInt(3),
 					neg: true,
 				},
 			},
@@ -1096,16 +1128,16 @@ func TestInt_Or(t *testing.T) {
 		{
 			name: "Should return correct value",
 			fields: fields{
-				abs: new(uint256.Int),
+				abs: uint256.Int{},
 				neg: false,
 			},
 			args: args{
 				x: &Int{
-					abs: uint256.NewInt(10),
+					abs: *uint256.NewInt(10),
 					neg: true,
 				},
 				y: &Int{
-					abs: uint256.NewInt(3),
+					abs: *uint256.NewInt(3),
 					neg: true,
 				},
 			},
@@ -1127,7 +1159,7 @@ func TestInt_Or(t *testing.T) {
 
 func TestInt_And(t *testing.T) {
 	type fields struct {
-		abs *uint256.Int
+		abs uint256.Int
 		neg bool
 	}
 	type args struct {
@@ -1144,16 +1176,16 @@ func TestInt_And(t *testing.T) {
 		{
 			name: "Should return correct value",
 			fields: fields{
-				abs: new(uint256.Int),
+				abs: uint256.Int{},
 				neg: false,
 			},
 			args: args{
 				x: &Int{
-					abs: uint256.NewInt(10),
+					abs: *uint256.NewInt(10),
 					neg: false,
 				},
 				y: &Int{
-					abs: uint256.NewInt(3),
+					abs: *uint256.NewInt(3),
 					neg: false,
 				},
 			},
@@ -1162,16 +1194,16 @@ func TestInt_And(t *testing.T) {
 		{
 			name: "Should return correct value",
 			fields: fields{
-				abs: new(uint256.Int),
+				abs: uint256.Int{},
 				neg: false,
 			},
 			args: args{
 				x: &Int{
-					abs: uint256.NewInt(10),
+					abs: *uint256.NewInt(10),
 					neg: true,
 				},
 				y: &Int{
-					abs: uint256.NewInt(3),
+					abs: *uint256.NewInt(3),
 					neg: false,
 				},
 			},
@@ -1180,16 +1212,16 @@ func TestInt_And(t *testing.T) {
 		{
 			name: "Should return correct value",
 			fields: fields{
-				abs: new(uint256.Int),
+				abs: uint256.Int{},
 				neg: false,
 			},
 			args: args{
 				x: &Int{
-					abs: uint256.NewInt(10),
+					abs: *uint256.NewInt(10),
 					neg: false,
 				},
 				y: &Int{
-					abs: uint256.NewInt(3),
+					abs: *uint256.NewInt(3),
 					neg: true,
 				},
 			},
@@ -1198,16 +1230,16 @@ func TestInt_And(t *testing.T) {
 		{
 			name: "Should return correct value",
 			fields: fields{
-				abs: new(uint256.Int),
+				abs: uint256.Int{},
 				neg: false,
 			},
 			args: args{
 				x: &Int{
-					abs: uint256.NewInt(10),
+					abs: *uint256.NewInt(10),
 					neg: true,
 				},
 				y: &Int{
-					abs: uint256.NewInt(3),
+					abs: *uint256.NewInt(3),
 					neg: true,
 				},
 			},
@@ -1229,7 +1261,7 @@ func TestInt_And(t *testing.T) {
 
 func TestInt_Quo(t *testing.T) {
 	type fields struct {
-		abs *uint256.Int
+		abs uint256.Int
 		neg bool
 	}
 	type args struct {
@@ -1246,16 +1278,16 @@ func TestInt_Quo(t *testing.T) {
 		{
 			name: "Should return correct value when perform two positive numbers",
 			fields: fields{
-				abs: new(uint256.Int),
+				abs: uint256.Int{},
 				neg: false,
 			},
 			args: args{
 				x: &Int{
-					abs: uint256.NewInt(10),
+					abs: *uint256.NewInt(10),
 					neg: false,
 				},
 				y: &Int{
-					abs: uint256.NewInt(3),
+					abs: *uint256.NewInt(3),
 					neg: false,
 				},
 			},
@@ -1264,16 +1296,16 @@ func TestInt_Quo(t *testing.T) {
 		{
 			name: "Should return correct value perform a < 0 and b > 0",
 			fields: fields{
-				abs: new(uint256.Int),
+				abs: uint256.Int{},
 				neg: false,
 			},
 			args: args{
 				x: &Int{
-					abs: uint256.NewInt(10),
+					abs: *uint256.NewInt(10),
 					neg: true,
 				},
 				y: &Int{
-					abs: uint256.NewInt(3),
+					abs: *uint256.NewInt(3),
 					neg: false,
 				},
 			},
@@ -1282,16 +1314,16 @@ func TestInt_Quo(t *testing.T) {
 		{
 			name: "Should return correct value perform a >0 and b < 0",
 			fields: fields{
-				abs: new(uint256.Int),
+				abs: uint256.Int{},
 				neg: false,
 			},
 			args: args{
 				x: &Int{
-					abs: uint256.NewInt(10),
+					abs: *uint256.NewInt(10),
 					neg: false,
 				},
 				y: &Int{
-					abs: uint256.NewInt(3),
+					abs: *uint256.NewInt(3),
 					neg: true,
 				},
 			},
@@ -1300,16 +1332,16 @@ func TestInt_Quo(t *testing.T) {
 		{
 			name: "Should return correct value perform two negative numbers",
 			fields: fields{
-				abs: new(uint256.Int),
+				abs: uint256.Int{},
 				neg: false,
 			},
 			args: args{
 				x: &Int{
-					abs: uint256.NewInt(10),
+					abs: *uint256.NewInt(10),
 					neg: true,
 				},
 				y: &Int{
-					abs: uint256.NewInt(3),
+					abs: *uint256.NewInt(3),
 					neg: true,
 				},
 			},
@@ -1331,7 +1363,7 @@ func TestInt_Quo(t *testing.T) {
 
 func TestInt_Cmp(t *testing.T) {
 	type fields struct {
-		abs *uint256.Int
+		abs uint256.Int
 		neg bool
 	}
 	type args struct {
@@ -1347,12 +1379,12 @@ func TestInt_Cmp(t *testing.T) {
 		{
 			name: "Should return correct value",
 			fields: fields{
-				abs: uint256.NewInt(10),
+				abs: *uint256.NewInt(10),
 				neg: false,
 			},
 			args: args{
 				x: &Int{
-					abs: uint256.NewInt(10),
+					abs: *uint256.NewInt(10),
 				},
 			},
 			wantR: 0,
@@ -1360,12 +1392,12 @@ func TestInt_Cmp(t *testing.T) {
 		{
 			name: "Should return correct value",
 			fields: fields{
-				abs: uint256.NewInt(4),
+				abs: *uint256.NewInt(4),
 				neg: false,
 			},
 			args: args{
 				x: &Int{
-					abs: uint256.NewInt(10),
+					abs: *uint256.NewInt(10),
 				},
 			},
 			wantR: -1,
@@ -1373,12 +1405,12 @@ func TestInt_Cmp(t *testing.T) {
 		{
 			name: "Should return correct value",
 			fields: fields{
-				abs: uint256.NewInt(10),
+				abs: *uint256.NewInt(10),
 				neg: false,
 			},
 			args: args{
 				x: &Int{
-					abs: uint256.NewInt(4),
+					abs: *uint256.NewInt(4),
 				},
 			},
 			wantR: 1,
@@ -1386,12 +1418,12 @@ func TestInt_Cmp(t *testing.T) {
 		{
 			name: "Should return correct value",
 			fields: fields{
-				abs: uint256.NewInt(10),
+				abs: *uint256.NewInt(10),
 				neg: false,
 			},
 			args: args{
 				x: &Int{
-					abs: uint256.NewInt(0),
+					abs: *uint256.NewInt(0),
 				},
 			},
 			wantR: 1,
@@ -1399,12 +1431,12 @@ func TestInt_Cmp(t *testing.T) {
 		{
 			name: "Should return correct value",
 			fields: fields{
-				abs: uint256.NewInt(0),
+				abs: *uint256.NewInt(0),
 				neg: true,
 			},
 			args: args{
 				x: &Int{
-					abs: uint256.NewInt(0),
+					abs: *uint256.NewInt(0),
 				},
 			},
 			wantR: 0,

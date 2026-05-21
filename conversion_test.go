@@ -107,7 +107,6 @@ func initSamples() bool {
 	// newRandInt creates new Int with so many highly likely non-zero random words.
 	newRandInt := func(numWords int) Int {
 		var z Int
-		z.initiateAbs()
 		for i := 0; i < numWords; i++ {
 			z.abs[i] = rnd.Uint64()
 		}

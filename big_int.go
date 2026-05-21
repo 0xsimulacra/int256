@@ -6,30 +6,29 @@ import (
 	"github.com/holiman/uint256"
 )
 
-var negativeOneBigInt = big.NewInt(-1)
 var zero = big.NewInt(0)
 
 func (z *Int) ToBig() *big.Int {
 	b := z.abs.ToBig()
 	if z.neg {
-		return b.Mul(b, negativeOneBigInt)
+		return b.Neg(b)
 	}
 	return b
 }
 
 func MustFromBig(x *big.Int) *Int {
-	big, overflow := FromBig(x)
+	iBig, overflow := FromBig(x)
 	if overflow {
 		panic("cannot parsing from big.Int")
 	}
-	return big
+	return iBig
 }
 
 func FromBig(x *big.Int) (*Int, bool) {
 	num := x
 	neg := false
 	if x.Cmp(zero) == -1 {
-		num = new(big.Int).Mul(x, negativeOneBigInt)
+		num = new(big.Int).Neg(x)
 		neg = true
 	}
 	abs, overflow := uint256.FromBig(num)
@@ -52,12 +51,12 @@ func FromBig(x *big.Int) (*Int, bool) {
 		}
 		neg = x.Sign() < 0
 		return &Int{
-			abs,
-			neg,
+			abs: *abs,
+			neg: neg,
 		}, true
 	}
 	return &Int{
-		abs,
-		neg,
+		abs: *abs,
+		neg: neg,
 	}, false
 }

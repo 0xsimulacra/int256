@@ -12,14 +12,13 @@ var maxUint256 = uint256.MustFromHex("0xffffffffffffffffffffffffffffffffffffffff
 // Int
 // a wrapper around uint256.Int to support negative numbers
 type Int struct {
-	abs *uint256.Int
+	abs uint256.Int
 	neg bool
 }
 
 // Clone method creates a deep copy of Int
 func (z *Int) Clone() *Int {
-	// create a new uint256.Int and set its value to the value of z.abs
-	return &Int{abs: z.abs.Clone(), neg: z.neg}
+	return &Int{abs: z.abs, neg: z.neg}
 }
 
 // Sign returns:
@@ -28,7 +27,7 @@ func (z *Int) Clone() *Int {
 //	 0 if x == 0
 //	+1 if x >  0
 func (z *Int) Sign() int {
-	if z.abs == nil || z.abs.IsZero() { // or your own limb check
+	if z.abs.IsZero() {
 		return 0
 	}
 	if z.neg {
@@ -38,9 +37,7 @@ func (z *Int) Sign() int {
 }
 
 func New() *Int {
-	return &Int{
-		abs: new(uint256.Int),
-	}
+	return &Int{}
 }
 
 // NewInt allocates and returns a new Int set to x.
@@ -50,28 +47,26 @@ func NewInt(x int64) *Int {
 
 // SetInt64 sets z to x and returns z.
 func (z *Int) SetInt64(x int64) *Int {
-	z.initiateAbs()
 	if x >= 0 {
 		z.neg = false
 	} else {
 		z.neg = true
 		x = -x
 	}
-	z.abs = z.abs.SetUint64(uint64(x))
+	z.abs.SetUint64(uint64(x))
 	return z
 }
 
 // SetUint64 sets z to x and returns z.
 func (z *Int) SetUint64(x uint64) *Int {
-	z.initiateAbs()
-	z.abs = z.abs.SetUint64(x)
+	z.abs.SetUint64(x)
 	z.neg = false
 	return z
 }
 
 // Set sets z to x and returns z
 func (z *Int) Set(x *Int) *Int {
-	z.abs.Set(x.abs)
+	z.abs.Set(&x.abs)
 	z.neg = x.neg
 	return z
 }
@@ -104,8 +99,8 @@ func (z *Int) SetString(s string) (*Int, error) {
 	}
 
 	return &Int{
-		abs,
-		neg,
+		abs: *abs,
+		neg: neg,
 	}, nil
 }
 
@@ -123,22 +118,20 @@ func (z *Int) SetString(s string) (*Int, error) {
 // }
 
 func (z *Int) Add(x, y *Int) *Int {
-	z.initiateAbs()
-
 	neg := x.neg
 
 	if x.neg == y.neg {
 		// x + y == x + y
 		// (-x) + (-y) == -(x + y)
-		z.abs = z.abs.Add(x.abs, y.abs)
+		z.abs.Add(&x.abs, &y.abs)
 	} else {
 		// x + (-y) == x - y == -(y - x)
 		// (-x) + y == y - x == -(x - y)
-		if x.abs.Cmp(y.abs) >= 0 {
-			z.abs = z.abs.Sub(x.abs, y.abs)
+		if x.abs.Cmp(&y.abs) >= 0 {
+			z.abs.Sub(&x.abs, &y.abs)
 		} else {
 			neg = !neg
-			z.abs = z.abs.Sub(y.abs, x.abs)
+			z.abs.Sub(&y.abs, &x.abs)
 		}
 	}
 	z.neg = neg // 0 has no sign
@@ -147,21 +140,19 @@ func (z *Int) Add(x, y *Int) *Int {
 
 // Sub sets z to the difference x-y and returns z.
 func (z *Int) Sub(x, y *Int) *Int {
-	z.initiateAbs()
-
 	neg := x.neg
 	if x.neg != y.neg {
 		// x - (-y) == x + y
 		// (-x) - y == -(x + y)
-		z.abs = z.abs.Add(x.abs, y.abs)
+		z.abs.Add(&x.abs, &y.abs)
 	} else {
 		// x - y == x - y == -(y - x)
 		// (-x) - (-y) == y - x == -(x - y)
-		if x.abs.Cmp(y.abs) >= 0 {
-			z.abs = z.abs.Sub(x.abs, y.abs)
+		if x.abs.Cmp(&y.abs) >= 0 {
+			z.abs.Sub(&x.abs, &y.abs)
 		} else {
 			neg = !neg
-			z.abs = z.abs.Sub(y.abs, x.abs)
+			z.abs.Sub(&y.abs, &x.abs)
 		}
 	}
 	z.neg = neg // 0 has no sign
@@ -170,9 +161,7 @@ func (z *Int) Sub(x, y *Int) *Int {
 
 // Mul sets z to the product x*y and returns z.
 func (z *Int) Mul(x, y *Int) *Int {
-	z.initiateAbs()
-
-	z.abs = z.abs.Mul(x.abs, y.abs)
+	z.abs.Mul(&x.abs, &y.abs)
 	z.neg = x.neg != y.neg // 0 has no sign
 	return z
 }
@@ -180,38 +169,59 @@ func (z *Int) Mul(x, y *Int) *Int {
 // Sqrt sets z to ⌊√x⌋, the largest integer such that z² ≤ x, and returns z.
 // It panics if x is negative.
 func (z *Int) Sqrt(x *Int) *Int {
-	z.initiateAbs()
-
 	if x.neg {
 		panic("square root of negative number")
 	}
 	z.neg = false
-	z.abs = z.abs.Sqrt(x.abs)
+	z.abs.Sqrt(&x.abs)
 	return z
 }
 
 // Rsh sets z = x >> n and returns z.
 func (z *Int) Rsh(x *Int, n uint) *Int {
-	z.initiateAbs()
-
 	if !x.neg {
-		z.abs.Rsh(x.abs, n)
+		z.abs.Rsh(&x.abs, n)
 		z.neg = x.neg
 		return z
 	}
-	// TODO: implement
-	b := x.ToBig()
-	return MustFromBig(b.Rsh(b, n))
+
+	hasRem := hasLowerBits(&x.abs, n)
+	z.abs.Rsh(&x.abs, n)
+	if hasRem {
+		z.abs.Add(&z.abs, one)
+	}
+	z.neg = !z.abs.IsZero()
+	return z
+}
+
+func hasLowerBits(x *uint256.Int, n uint) bool {
+	if n == 0 || x.IsZero() {
+		return false
+	}
+	if n >= 256 {
+		return true
+	}
+
+	words := n / 64
+	for i := uint(0); i < words; i++ {
+		if x[i] != 0 {
+			return true
+		}
+	}
+
+	bits := n % 64
+	if bits == 0 {
+		return false
+	}
+	return x[words]&(uint64(1)<<bits-1) != 0
 }
 
 // Quo sets z to the quotient x/y for y != 0 and returns z.
 // If y == 0, a division-by-zero run-time panic occurs.
 // Quo implements truncated division (like Go); see QuoRem for more details.
 func (z *Int) Quo(x, y *Int) *Int {
-	z.initiateAbs()
-
-	z.abs = z.abs.Div(x.abs, y.abs)
-	z.neg = len(z.abs) > 0 && x.neg != y.neg // 0 has no sign
+	z.abs.Div(&x.abs, &y.abs)
+	z.neg = !z.abs.IsZero() && x.neg != y.neg // 0 has no sign
 	return z
 }
 
@@ -219,10 +229,8 @@ func (z *Int) Quo(x, y *Int) *Int {
 // If y == 0, a division-by-zero run-time panic occurs.
 // Rem implements truncated modulus (like Go); see QuoRem for more details.
 func (z *Int) Rem(x, y *Int) *Int {
-	z.initiateAbs()
-
-	z.abs.Mod(x.abs, y.abs)
-	z.neg = len(z.abs) > 0 && x.neg // 0 has no sign
+	z.abs.Mod(&x.abs, &y.abs)
+	z.neg = !z.abs.IsZero() && x.neg // 0 has no sign
 	return z
 }
 
@@ -231,7 +239,7 @@ func (z *Int) Eq(x *Int) bool {
 	if z.abs.IsZero() && x.abs.IsZero() {
 		return true
 	}
-	return z.neg == x.neg && z.abs.Eq(x.abs)
+	return z.neg == x.neg && z.abs.Eq(&x.abs)
 }
 
 // IsZero returns true if z == 0
@@ -245,8 +253,6 @@ func (z *Int) IsZero() bool {
 //	 0 if x == y
 //	+1 if x >  y
 func (z *Int) Cmp(x *Int) (r int) {
-	z.initiateAbs()
-
 	// x cmp y == x cmp y
 	// x cmp (-y) == x
 	// (-x) cmp y == y
@@ -255,7 +261,7 @@ func (z *Int) Cmp(x *Int) (r int) {
 	case z == x:
 		// nothing to do
 	case z.neg == x.neg:
-		r = z.abs.Cmp(x.abs)
+		r = z.abs.Cmp(&x.abs)
 		if z.neg {
 			r = -r
 		}
@@ -276,14 +282,12 @@ func (z *Int) Cmp(x *Int) (r int) {
 // Modular exponentiation of inputs of a particular size is not a
 // cryptographically constant-time operation.
 func (z *Int) Exp(x, y, m *Int) *Int {
-	z.initiateAbs()
-
 	if x == nil {
 		panic("x is nil")
 	}
 	if !x.neg && !y.neg && m == nil {
 		z.neg = false
-		z.abs.Exp(x.abs, y.abs)
+		z.abs.Exp(&x.abs, &y.abs)
 		return z
 	}
 	// TODO: implement
@@ -299,19 +303,16 @@ func (z *Int) Exp(x, y, m *Int) *Int {
 // MulDivOverflow calculates (x*y)/d with full precision, returns z and whether overflow occurred in multiply process (result does not fit to 256-bit).
 // computes 512-bit multiplication and 512 by 256 division.
 func (z *Int) MulDivOverflow(x, y, d *Int) (*Int, bool) {
-	z.initiateAbs()
 	z.neg = (x.neg != y.neg) != d.neg
 
 	var overflow bool
-	z.abs, overflow = z.abs.MulDivOverflow(x.abs, y.abs, d.abs)
+	_, overflow = z.abs.MulDivOverflow(&x.abs, &y.abs, &d.abs)
 
 	return z, overflow
 }
 
 func (z *Int) Div(x, y *Int) *Int {
-	z.initiateAbs()
-
-	z.abs.Div(x.abs, y.abs)
+	z.abs.Div(&x.abs, &y.abs)
 	if x.neg == y.neg {
 		z.neg = false
 	} else {
@@ -322,29 +323,28 @@ func (z *Int) Div(x, y *Int) *Int {
 
 // Lsh sets z = x << n and returns z.
 func (z *Int) Lsh(x *Int, n uint) *Int {
-	z.initiateAbs()
-	b := new(big.Int).Lsh(x.abs.ToBig(), n)
-	z.abs = uint256.MustFromBig(b)
+	if bitLen := x.abs.BitLen(); bitLen != 0 && n > uint(256-bitLen) {
+		panic("overflow")
+	}
+	z.abs.Lsh(&x.abs, n)
 	z.neg = x.neg
 	return z
 }
 
 // Or sets z = x | y and returns z.
 func (z *Int) Or(x, y *Int) *Int {
-	z.initiateAbs()
-
 	if x.neg == y.neg {
 		if x.neg {
 			// (-x) | (-y) == ^(x-1) | ^(y-1) == ^((x-1) & (y-1)) == -(((x-1) & (y-1)) + 1)
-			x1 := new(uint256.Int).Sub(x.abs, one)
-			y1 := new(uint256.Int).Sub(y.abs, one)
-			z.abs = z.abs.Add(z.abs.And(x1, y1), one)
+			x1 := new(uint256.Int).Sub(&x.abs, one)
+			y1 := new(uint256.Int).Sub(&y.abs, one)
+			z.abs.Add(z.abs.And(x1, y1), one)
 			z.neg = true // z cannot be zero if x and y are negative
 			return z
 		}
 
 		// x | y == x | y
-		z.abs = z.abs.Or(x.abs, y.abs)
+		z.abs.Or(&x.abs, &y.abs)
 		z.neg = false
 		return z
 	}
@@ -355,8 +355,8 @@ func (z *Int) Or(x, y *Int) *Int {
 	}
 
 	// x | (-y) == x | ^(y-1) == ^((y-1) &^ x) == -(^((y-1) &^ x) + 1)
-	y1 := new(uint256.Int).Sub(y.abs, one)
-	z.abs = z.abs.Add(z.abs.And(y1, new(uint256.Int).Xor(x.abs, maxUint256)), one)
+	y1 := new(uint256.Int).Sub(&y.abs, one)
+	z.abs.Add(z.abs.And(y1, new(uint256.Int).Xor(&x.abs, maxUint256)), one)
 	z.neg = true // z cannot be zero if one of x or y is negative
 
 	return z
@@ -364,20 +364,18 @@ func (z *Int) Or(x, y *Int) *Int {
 
 // And sets z = x & y and returns z.
 func (z *Int) And(x, y *Int) *Int {
-	z.initiateAbs()
-
 	if x.neg == y.neg {
 		if x.neg {
 			// (-x) & (-y) == ^(x-1) & ^(y-1) == ^((x-1) | (y-1)) == -(((x-1) | (y-1)) + 1)
-			x1 := new(uint256.Int).Sub(x.abs, one)
-			y1 := new(uint256.Int).Sub(y.abs, one)
-			z.abs = z.abs.Add(z.abs.Or(x1, y1), one)
+			x1 := new(uint256.Int).Sub(&x.abs, one)
+			y1 := new(uint256.Int).Sub(&y.abs, one)
+			z.abs.Add(z.abs.Or(x1, y1), one)
 			z.neg = true // z cannot be zero if x and y are negative
 			return z
 		}
 
 		// x & y == x & y
-		z.abs = z.abs.And(x.abs, y.abs)
+		z.abs.And(&x.abs, &y.abs)
 		z.neg = false
 		return z
 	}
@@ -388,8 +386,8 @@ func (z *Int) And(x, y *Int) *Int {
 	}
 
 	// x & (-y) == x & ^(y-1) == x &^ (y-1)
-	y1 := new(uint256.Int).Sub(y.abs, one)
-	z.abs = z.abs.And(x.abs, new(uint256.Int).Xor(y1, maxUint256))
+	y1 := new(uint256.Int).Sub(&y.abs, one)
+	z.abs.And(&x.abs, new(uint256.Int).Xor(y1, maxUint256))
 	z.neg = false
 
 	return z
@@ -398,13 +396,6 @@ func (z *Int) And(x, y *Int) *Int {
 // MostSignificantBit return the most significant bit of z, ignoring the bit or the sign
 func (z *Int) MostSignificantBit() uint8 {
 	return uint8(z.abs.BitLen() - 1)
-}
-
-// initiateAbs sets default value for `z.abs` value if is nil
-func (z *Int) initiateAbs() {
-	if z.abs == nil {
-		z.abs = new(uint256.Int)
-	}
 }
 
 // Negate return a new int256.Int equal to the negative of z
@@ -423,19 +414,19 @@ func (z *Int) InPlaceNegate() *Int {
 // AbsInt Absolute value of z having the same type int256.Int
 func (z *Int) AbsInt() *Int {
 	return &Int{
-		abs: z.abs.Clone(),
+		abs: z.abs,
 		neg: false,
 	}
 }
 
 // SignedMaxAbs take the maximum of abs of a and b and return z with that value but the sign of c
 func (z *Int) SignedMaxAbs(a, b, c *Int) *Int {
-	if a.abs.Cmp(b.abs) >= 0 {
+	if a.abs.Cmp(&b.abs) >= 0 {
 		// a is bigger or equal
-		z.abs = a.abs.Clone()
+		z.abs = a.abs
 	} else {
 		// b is bigger
-		z.abs = b.abs.Clone()
+		z.abs = b.abs
 	}
 	z.neg = c.neg
 	return z
@@ -443,7 +434,7 @@ func (z *Int) SignedMaxAbs(a, b, c *Int) *Int {
 
 // Signed z with the value equal to a but the sign of b
 func (z *Int) Signed(a, b *Int) *Int {
-	z.abs = a.abs.Clone()
+	z.abs = a.abs
 	z.neg = b.neg
 	return z
 }
@@ -452,7 +443,7 @@ func (z *Int) Signed(a, b *Int) *Int {
 func (z *Int) Relu() *Int {
 	x := NewInt(0)
 	if !z.neg {
-		x.abs = z.abs.Clone()
+		x.abs = z.abs
 	}
 	return x
 }

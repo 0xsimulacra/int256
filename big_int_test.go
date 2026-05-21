@@ -10,7 +10,7 @@ import (
 
 func TestInt_ToBig(t *testing.T) {
 	type fields struct {
-		abs *uint256.Int
+		abs uint256.Int
 		neg bool
 	}
 	tests := []struct {
@@ -22,7 +22,7 @@ func TestInt_ToBig(t *testing.T) {
 		{
 			name: "Should return correct value when parsing positive number",
 			fields: fields{
-				abs: uint256.NewInt(10),
+				abs: *uint256.NewInt(10),
 				neg: false,
 			},
 			want: big.NewInt(10),
@@ -30,7 +30,7 @@ func TestInt_ToBig(t *testing.T) {
 		{
 			name: "Should return correct value when parsing negative number",
 			fields: fields{
-				abs: uint256.NewInt(10),
+				abs: *uint256.NewInt(10),
 				neg: true,
 			},
 			want: big.NewInt(-10),
@@ -66,7 +66,7 @@ func TestFromBig(t *testing.T) {
 				x: big.NewInt(10),
 			},
 			want: &Int{
-				abs: uint256.NewInt(10),
+				abs: *uint256.NewInt(10),
 				neg: false,
 			},
 			want1: false,
@@ -77,7 +77,7 @@ func TestFromBig(t *testing.T) {
 				x: big.NewInt(-10),
 			},
 			want: &Int{
-				abs: uint256.NewInt(10),
+				abs: *uint256.NewInt(10),
 				neg: true,
 			},
 			want1: false,

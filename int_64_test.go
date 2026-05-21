@@ -8,7 +8,7 @@ import (
 
 func TestInt_Int64(t *testing.T) {
 	type fields struct {
-		abs *uint256.Int
+		abs uint256.Int
 		neg bool
 	}
 	tests := []struct {
@@ -20,7 +20,7 @@ func TestInt_Int64(t *testing.T) {
 		{
 			name: "Should return correct value when parsing positive number",
 			fields: fields{
-				abs: uint256.NewInt(10),
+				abs: *uint256.NewInt(10),
 				neg: false,
 			},
 			want: 10,
@@ -28,7 +28,7 @@ func TestInt_Int64(t *testing.T) {
 		{
 			name: "Should return correct value when parsing negative number",
 			fields: fields{
-				abs: uint256.NewInt(10),
+				abs: *uint256.NewInt(10),
 				neg: true,
 			},
 			want: -10,

@@ -13,7 +13,6 @@ import (
 // Notable differences:
 // - This method does not accept underscore input, e.g. "100_000"
 func (z *Int) SetFromDecimal(decimal string) (err error) {
-	z.initiateAbs()
 	if strings.HasPrefix(decimal, "-") {
 		z.neg = true
 		decimal = decimal[1:]
@@ -54,7 +53,6 @@ func MustFromDecimal(decimal string) *Int {
 // - This method does not accept underscore input, e.g. "100_000",
 // - negative value should be prefixed with "-" like "-0x0"
 func (z *Int) SetFromHex(hex string) error {
-	z.initiateAbs()
 	if strings.HasPrefix(hex, "-") {
 		z.neg = true
 		hex = hex[1:]
@@ -90,7 +88,6 @@ func MustFromHex(hex string) *Int {
 
 // Hex encodes z in 0x-prefixed or -0x-prefixed  hexadecimal form.
 func (z *Int) Hex() string {
-	z.initiateAbs()
 	if z.abs.IsZero() {
 		return "0x0"
 	}
@@ -102,7 +99,6 @@ func (z *Int) Hex() string {
 
 // Dec returns the decimal representation of z.
 func (z *Int) Dec() string {
-	z.initiateAbs()
 	if z.abs.IsZero() {
 		return "0"
 	}
@@ -190,7 +186,7 @@ func (z *Int) CmpU(x *uint256.Int) int {
 
 // TempAbs Absolute value of z having the type uint256.Int without cloning it
 func (z *Int) TempAbs() *uint256.Int {
-	return z.abs
+	return &z.abs
 }
 
 // Abs Absolute value of z having the type uint256.Int
@@ -201,6 +197,6 @@ func (z *Int) Abs() *uint256.Int {
 // FromUInt256 create a int256.Int from a uint256.Int
 func FromUInt256(x *uint256.Int) *Int {
 	z := new(Int)
-	z.abs = x.Clone()
+	z.abs.Set(x)
 	return z
 }
