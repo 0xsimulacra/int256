@@ -40,6 +40,10 @@
           go = _pkgGo;
         };
 
+        _pkgGoPerf = pkgsUnstable.goperf.override {
+          buildGoModule = _pkgGoModule;
+        };
+
       in
       {
         devShells.default = pkgs.mkShell {
@@ -50,6 +54,7 @@
             _pkgGopls
             _pkgGoDelve
             _pkgGoTools
+            _pkgGoPerf
 
             pkgs.git
             pkgs.curl
