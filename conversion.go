@@ -188,6 +188,11 @@ func (z *Int) CmpU(x *uint256.Int) int {
 	return z.abs.Cmp(x)
 }
 
+// TempAbs Absolute value of z having the type uint256.Int without cloning it
+func (z *Int) TempAbs() *uint256.Int {
+	return z.abs
+}
+
 // Abs Absolute value of z having the type uint256.Int
 func (z *Int) Abs() *uint256.Int {
 	return z.abs.Clone()

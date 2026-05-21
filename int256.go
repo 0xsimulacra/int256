@@ -9,6 +9,8 @@ import (
 var one = uint256.NewInt(1)
 var maxUint256 = uint256.MustFromHex("0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff")
 
+// Int
+// a wrapper around uint256.Int to support negative numbers
 type Int struct {
 	abs *uint256.Int
 	neg bool
@@ -26,7 +28,7 @@ func (z *Int) Clone() *Int {
 //	 0 if x == 0
 //	+1 if x >  0
 func (z *Int) Sign() int {
-	if z.abs == nil || z.abs.IsZero() {
+	if z.abs == nil || z.abs.IsZero() { // or your own limb check
 		return 0
 	}
 	if z.neg {
@@ -41,11 +43,14 @@ func New() *Int {
 	}
 }
 
+// NewInt allocates and returns a new Int set to x.
+func NewInt(x int64) *Int {
+	return New().SetInt64(x)
+}
+
 // SetInt64 sets z to x and returns z.
 func (z *Int) SetInt64(x int64) *Int {
-	if z.abs == nil {
-		panic("abs is nil")
-	}
+	z.initiateAbs()
 	if x >= 0 {
 		z.neg = false
 	} else {
@@ -58,20 +63,19 @@ func (z *Int) SetInt64(x int64) *Int {
 
 // SetUint64 sets z to x and returns z.
 func (z *Int) SetUint64(x uint64) *Int {
-	if z.abs == nil {
-		panic("abs is nil")
-	}
+	z.initiateAbs()
 	z.abs = z.abs.SetUint64(x)
 	z.neg = false
 	return z
 }
 
-// NewInt allocates and returns a new Int set to x.
-func NewInt(x int64) *Int {
-	return New().SetInt64(x)
+// Set sets z to x and returns z
+func (z *Int) Set(x *Int) *Int {
+	z.abs.Set(x.abs)
+	z.neg = x.neg
+	return z
 }
 
-// SetUint64 sets z to x and returns z.
 func (z *Int) SetString(s string) (*Int, error) {
 	origin := s
 	neg := false
@@ -222,6 +226,14 @@ func (z *Int) Rem(x, y *Int) *Int {
 	return z
 }
 
+// Eq returns true if z == x
+func (z *Int) Eq(x *Int) bool {
+	if z.abs.IsZero() && x.abs.IsZero() {
+		return true
+	}
+	return z.neg == x.neg && z.abs.Eq(x.abs)
+}
+
 // IsZero returns true if z == 0
 func (z *Int) IsZero() bool {
 	return z.abs.IsZero()
@@ -282,6 +294,18 @@ func (z *Int) Exp(x, y, m *Int) *Int {
 	big := new(big.Int).Exp(x.ToBig(), y.ToBig(), mBigInt)
 	z, _ = FromBig(big)
 	return z
+}
+
+// MulDivOverflow calculates (x*y)/d with full precision, returns z and whether overflow occurred in multiply process (result does not fit to 256-bit).
+// computes 512-bit multiplication and 512 by 256 division.
+func (z *Int) MulDivOverflow(x, y, d *Int) (*Int, bool) {
+	z.initiateAbs()
+	z.neg = (x.neg != y.neg) != d.neg
+
+	var overflow bool
+	z.abs, overflow = z.abs.MulDivOverflow(x.abs, y.abs, d.abs)
+
+	return z, overflow
 }
 
 func (z *Int) Div(x, y *Int) *Int {
@@ -407,7 +431,7 @@ func (z *Int) AbsInt() *Int {
 // SignedMaxAbs take the maximum of abs of a and b and return z with that value but the sign of c
 func (z *Int) SignedMaxAbs(a, b, c *Int) *Int {
 	if a.abs.Cmp(b.abs) >= 0 {
-		// a is big or equal
+		// a is bigger or equal
 		z.abs = a.abs.Clone()
 	} else {
 		// b is bigger
@@ -437,7 +461,6 @@ func (z *Int) Relu() *Int {
 func CondRef(c bool, x, y *Int) *Int {
 	if c {
 		return x
-	} else {
-		return y
 	}
+	return y
 }
