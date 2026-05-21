@@ -1010,6 +1010,63 @@ func TestInt_Exp(t *testing.T) {
 	}
 }
 
+func TestInt_ExpOptimizedPathsMatchBig(t *testing.T) {
+	tests := []struct {
+		name string
+		x    *big.Int
+		y    *big.Int
+		m    *big.Int
+	}{
+		{
+			name: "positive with large uint64 modulus",
+			x:    big.NewInt(123456789),
+			y:    big.NewInt(17),
+			m:    big.NewInt(8589934591),
+		},
+		{
+			name: "negative base odd exponent with large uint64 modulus",
+			x:    big.NewInt(-123456789),
+			y:    big.NewInt(17),
+			m:    big.NewInt(8589934591),
+		},
+		{
+			name: "negative base even exponent without modulus",
+			x:    big.NewInt(-3),
+			y:    big.NewInt(4),
+		},
+		{
+			name: "negative base odd exponent without modulus",
+			x:    big.NewInt(-3),
+			y:    big.NewInt(5),
+		},
+		{
+			name: "negative base odd exponent with zero modulus",
+			x:    big.NewInt(-3),
+			y:    big.NewInt(5),
+			m:    new(big.Int),
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			x := MustFromBig(tt.x)
+			y := MustFromBig(tt.y)
+			var m *Int
+			var mBig *big.Int
+			if tt.m != nil {
+				m = MustFromBig(tt.m)
+				mBig = new(big.Int).Set(tt.m)
+			}
+
+			got := new(Int).Exp(x, y, m)
+			want := MustFromBig(new(big.Int).Exp(new(big.Int).Set(tt.x), new(big.Int).Set(tt.y), mBig))
+			if !got.Eq(want) {
+				t.Fatalf("Exp() = %v, want %v", got, want)
+			}
+		})
+	}
+}
+
 func TestInt_Lsh(t *testing.T) {
 	type fields struct {
 		abs uint256.Int

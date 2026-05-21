@@ -11,12 +11,10 @@ package int256
 
 import (
 	"math/big"
+	"math/bits"
 
 	"github.com/holiman/uint256"
 )
-
-var one = uint256.NewInt(1)
-var maxUint256 = uint256.MustFromHex("0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff")
 
 // Int
 // Fixed-size signed-magnitude math library with a 256-bit absolute value.
@@ -196,37 +194,65 @@ func (z *Int) Rsh(x *Int, n uint) *Int {
 		z.neg = false
 		return z
 	}
+	if n == 0 {
+		z.abs.Set(&x.abs)
+		z.neg = !z.abs.IsZero()
+		return z
+	}
 
-	hasRem := hasLowerBits(&x.abs, n)
-	z.abs.Rsh(&x.abs, n)
-	if hasRem {
-		z.abs.Add(&z.abs, one)
+	return z.rshNegative(x, n)
+}
+
+func (z *Int) rshNegative(x *Int, n uint) *Int {
+	var rem bool
+	switch {
+	case n < 64:
+		rem = x.abs[0]&((uint64(1)<<n)-1) != 0
+		z.abs[0] = x.abs[0]>>n | x.abs[1]<<(64-n)
+		z.abs[1] = x.abs[1]>>n | x.abs[2]<<(64-n)
+		z.abs[2] = x.abs[2]>>n | x.abs[3]<<(64-n)
+		z.abs[3] = x.abs[3] >> n
+	case n == 64:
+		rem = x.abs[0] != 0
+		z.abs[0], z.abs[1], z.abs[2], z.abs[3] = x.abs[1], x.abs[2], x.abs[3], 0
+	case n < 128:
+		shift := n - 64
+		rem = x.abs[0] != 0 || x.abs[1]&((uint64(1)<<shift)-1) != 0
+		z.abs[0] = x.abs[1]>>shift | x.abs[2]<<(64-shift)
+		z.abs[1] = x.abs[2]>>shift | x.abs[3]<<(64-shift)
+		z.abs[2] = x.abs[3] >> shift
+		z.abs[3] = 0
+	case n == 128:
+		rem = (x.abs[0] | x.abs[1]) != 0
+		z.abs[0], z.abs[1], z.abs[2], z.abs[3] = x.abs[2], x.abs[3], 0, 0
+	case n < 192:
+		shift := n - 128
+		rem = (x.abs[0]|x.abs[1]) != 0 || x.abs[2]&((uint64(1)<<shift)-1) != 0
+		z.abs[0] = x.abs[2]>>shift | x.abs[3]<<(64-shift)
+		z.abs[1] = x.abs[3] >> shift
+		z.abs[2], z.abs[3] = 0, 0
+	case n == 192:
+		rem = (x.abs[0] | x.abs[1] | x.abs[2]) != 0
+		z.abs[0], z.abs[1], z.abs[2], z.abs[3] = x.abs[3], 0, 0, 0
+	case n < 256:
+		shift := n - 192
+		rem = (x.abs[0]|x.abs[1]|x.abs[2]) != 0 || x.abs[3]&((uint64(1)<<shift)-1) != 0
+		z.abs[0] = x.abs[3] >> shift
+		z.abs[1], z.abs[2], z.abs[3] = 0, 0, 0
+	default:
+		rem = (x.abs[0] | x.abs[1] | x.abs[2] | x.abs[3]) != 0
+		z.abs[0], z.abs[1], z.abs[2], z.abs[3] = 0, 0, 0, 0
+	}
+
+	if rem {
+		var carry uint64
+		z.abs[0], carry = bits.Add64(z.abs[0], 1, 0)
+		z.abs[1], carry = bits.Add64(z.abs[1], 0, carry)
+		z.abs[2], carry = bits.Add64(z.abs[2], 0, carry)
+		z.abs[3], _ = bits.Add64(z.abs[3], 0, carry)
 	}
 	z.neg = !z.abs.IsZero()
 	return z
-}
-
-func hasLowerBits(x *uint256.Int, n uint) bool {
-	if n == 0 || x.IsZero() {
-		return false
-	}
-	if n >= 256 {
-		return true
-	}
-
-	words := n / 64
-	for i := uint(0); i < words; i++ {
-		if x[i] != 0 {
-			return true
-		}
-	}
-
-	bits := n % 64
-	if bits == 0 {
-		return false
-	}
-	mask := (uint64(1) << bits) - 1
-	return x[words]&mask != 0
 }
 
 // Quo sets z to the quotient x/y for y != 0 and returns z.
@@ -303,6 +329,73 @@ func (z *Int) Exp(x, y, m *Int) *Int {
 		z.abs.Exp(&x.abs, &y.abs)
 		return z
 	}
+	return z.exp(x, y, m)
+}
+
+func (z *Int) exp(x, y, m *Int) *Int {
+	if !y.neg {
+		if m == nil || m.abs.IsZero() {
+			z.abs.Exp(&x.abs, &y.abs)
+			z.neg = !z.abs.IsZero() && x.neg && y.abs[0]&1 == 1
+			return z
+		}
+
+		if x.abs.IsUint64() && m.abs.IsUint64() && m.abs[0] <= 1<<32-1 {
+			mod := m.abs[0]
+			base := x.abs[0] % mod
+			if x.neg && y.abs[0]&1 == 1 && base != 0 {
+				base = mod - base
+			}
+			result := uint64(1 % mod)
+
+			expBitLen := y.abs.BitLen()
+			curBit := 0
+			for wordIndex := 0; wordIndex < 4 && curBit < expBitLen; wordIndex++ {
+				word := y.abs[wordIndex]
+				for ; curBit < expBitLen && curBit < (wordIndex+1)*64; curBit++ {
+					if word&1 == 1 {
+						result = (result * base) % mod
+					}
+					word >>= 1
+					if curBit+1 < expBitLen {
+						base = (base * base) % mod
+					}
+				}
+			}
+
+			z.abs.SetUint64(result)
+			z.neg = false
+			return z
+		}
+
+		var base, result uint256.Int
+		base.Mod(&x.abs, &m.abs)
+		if x.neg && y.abs[0]&1 == 1 && !base.IsZero() {
+			base.Sub(&m.abs, &base)
+		}
+
+		result.SetUint64(1)
+		result.Mod(&result, &m.abs)
+
+		expBitLen := y.abs.BitLen()
+		curBit := 0
+		for wordIndex := 0; wordIndex < 4 && curBit < expBitLen; wordIndex++ {
+			word := y.abs[wordIndex]
+			for ; curBit < expBitLen && curBit < (wordIndex+1)*64; curBit++ {
+				if word&1 == 1 {
+					result.MulMod(&result, &base, &m.abs)
+				}
+				word >>= 1
+				if curBit+1 < expBitLen {
+					base.MulMod(&base, &base, &m.abs)
+				}
+			}
+		}
+
+		z.abs.Set(&result)
+		z.neg = false
+		return z
+	}
 	// TODO: implement
 	var mBigInt *big.Int
 	if m != nil {
@@ -340,7 +433,7 @@ func (z *Int) Lsh(x *Int, n uint) *Int {
 		panic("overflow")
 	}
 	z.abs.Lsh(&x.abs, n)
-	z.neg = !z.abs.IsZero() && x.neg
+	z.neg = x.neg
 	return z
 }
 
@@ -349,17 +442,30 @@ func (z *Int) Or(x, y *Int) *Int {
 	if x.neg == y.neg {
 		if x.neg {
 			// (-x) | (-y) == ^(x-1) | ^(y-1) == ^((x-1) & (y-1)) == -(((x-1) & (y-1)) + 1)
-			var x1, y1 uint256.Int
-			x1.Sub(&x.abs, one)
-			y1.Sub(&y.abs, one)
-			z.abs.And(&x1, &y1)
-			z.abs.Add(&z.abs, one)
+			x0, borrow := bits.Sub64(x.abs[0], 1, 0)
+			x1, borrow := bits.Sub64(x.abs[1], 0, borrow)
+			x2, borrow := bits.Sub64(x.abs[2], 0, borrow)
+			x3, _ := bits.Sub64(x.abs[3], 0, borrow)
+
+			y0, borrow := bits.Sub64(y.abs[0], 1, 0)
+			y1, borrow := bits.Sub64(y.abs[1], 0, borrow)
+			y2, borrow := bits.Sub64(y.abs[2], 0, borrow)
+			y3, _ := bits.Sub64(y.abs[3], 0, borrow)
+
+			z.abs[0], z.abs[1], z.abs[2], z.abs[3] = x0&y0, x1&y1, x2&y2, x3&y3
+			z.abs[0], borrow = bits.Add64(z.abs[0], 1, 0)
+			z.abs[1], borrow = bits.Add64(z.abs[1], 0, borrow)
+			z.abs[2], borrow = bits.Add64(z.abs[2], 0, borrow)
+			z.abs[3], _ = bits.Add64(z.abs[3], 0, borrow)
 			z.neg = true // z cannot be zero if x and y are negative
 			return z
 		}
 
 		// x | y == x | y
-		z.abs.Or(&x.abs, &y.abs)
+		z.abs[0] = x.abs[0] | y.abs[0]
+		z.abs[1] = x.abs[1] | y.abs[1]
+		z.abs[2] = x.abs[2] | y.abs[2]
+		z.abs[3] = x.abs[3] | y.abs[3]
 		z.neg = false
 		return z
 	}
@@ -370,11 +476,16 @@ func (z *Int) Or(x, y *Int) *Int {
 	}
 
 	// x | (-y) == x | ^(y-1) == ^((y-1) &^ x) == -(^((y-1) &^ x) + 1)
-	var y1, notX uint256.Int
-	y1.Sub(&y.abs, one)
-	notX.Xor(&x.abs, maxUint256)
-	z.abs.And(&y1, &notX)
-	z.abs.Add(&z.abs, one)
+	y0, borrow := bits.Sub64(y.abs[0], 1, 0)
+	y1, borrow := bits.Sub64(y.abs[1], 0, borrow)
+	y2, borrow := bits.Sub64(y.abs[2], 0, borrow)
+	y3, _ := bits.Sub64(y.abs[3], 0, borrow)
+
+	z.abs[0], z.abs[1], z.abs[2], z.abs[3] = y0&^x.abs[0], y1&^x.abs[1], y2&^x.abs[2], y3&^x.abs[3]
+	z.abs[0], borrow = bits.Add64(z.abs[0], 1, 0)
+	z.abs[1], borrow = bits.Add64(z.abs[1], 0, borrow)
+	z.abs[2], borrow = bits.Add64(z.abs[2], 0, borrow)
+	z.abs[3], _ = bits.Add64(z.abs[3], 0, borrow)
 	z.neg = true // z cannot be zero if one of x or y is negative
 
 	return z
@@ -385,20 +496,33 @@ func (z *Int) And(x, y *Int) *Int {
 	if x.neg == y.neg {
 		if x.neg {
 			// (-x) & (-y) == ^(x-1) & ^(y-1) == ^((x-1) | (y-1)) == -(((x-1) | (y-1)) + 1)
-			var x1, y1 uint256.Int
-			x1.Sub(&x.abs, one)
-			y1.Sub(&y.abs, one)
-			z.abs.Or(&x1, &y1)
-			if z.abs.Eq(maxUint256) {
+			x0, borrow := bits.Sub64(x.abs[0], 1, 0)
+			x1, borrow := bits.Sub64(x.abs[1], 0, borrow)
+			x2, borrow := bits.Sub64(x.abs[2], 0, borrow)
+			x3, _ := bits.Sub64(x.abs[3], 0, borrow)
+
+			y0, borrow := bits.Sub64(y.abs[0], 1, 0)
+			y1, borrow := bits.Sub64(y.abs[1], 0, borrow)
+			y2, borrow := bits.Sub64(y.abs[2], 0, borrow)
+			y3, _ := bits.Sub64(y.abs[3], 0, borrow)
+
+			z.abs[0], z.abs[1], z.abs[2], z.abs[3] = x0|y0, x1|y1, x2|y2, x3|y3
+			if z.abs[0]&z.abs[1]&z.abs[2]&z.abs[3] == ^uint64(0) {
 				panic("overflow")
 			}
-			z.abs.Add(&z.abs, one)
+			z.abs[0], borrow = bits.Add64(z.abs[0], 1, 0)
+			z.abs[1], borrow = bits.Add64(z.abs[1], 0, borrow)
+			z.abs[2], borrow = bits.Add64(z.abs[2], 0, borrow)
+			z.abs[3], _ = bits.Add64(z.abs[3], 0, borrow)
 			z.neg = true // z cannot be zero if x and y are negative
 			return z
 		}
 
 		// x & y == x & y
-		z.abs.And(&x.abs, &y.abs)
+		z.abs[0] = x.abs[0] & y.abs[0]
+		z.abs[1] = x.abs[1] & y.abs[1]
+		z.abs[2] = x.abs[2] & y.abs[2]
+		z.abs[3] = x.abs[3] & y.abs[3]
 		z.neg = false
 		return z
 	}
@@ -409,10 +533,12 @@ func (z *Int) And(x, y *Int) *Int {
 	}
 
 	// x & (-y) == x & ^(y-1) == x &^ (y-1)
-	var y1, notY1 uint256.Int
-	y1.Sub(&y.abs, one)
-	notY1.Xor(&y1, maxUint256)
-	z.abs.And(&x.abs, &notY1)
+	y0, borrow := bits.Sub64(y.abs[0], 1, 0)
+	y1, borrow := bits.Sub64(y.abs[1], 0, borrow)
+	y2, borrow := bits.Sub64(y.abs[2], 0, borrow)
+	y3, _ := bits.Sub64(y.abs[3], 0, borrow)
+
+	z.abs[0], z.abs[1], z.abs[2], z.abs[3] = x.abs[0]&^y0, x.abs[1]&^y1, x.abs[2]&^y2, x.abs[3]&^y3
 	z.neg = false
 
 	return z
