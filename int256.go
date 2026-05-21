@@ -1,3 +1,12 @@
+// Package int256: Fixed-size signed-magnitude math library with a 256-bit absolute value.
+//
+// Values are represented as a 256-bit absolute value plus a sign bit. This is
+// not Solidity/EVM int256 two's-complement arithmetic.
+//
+// Copyright (c) 2023 Trịnh Đức Bảo Linh(Kevin)
+// Copyright 2018-2020 uint256 Authors
+// Copyright (c) 2026 0xsimulacra
+// SPDX-License-Identifier: MIT AND BSD-3-Clause
 package int256
 
 import (
@@ -10,7 +19,10 @@ var one = uint256.NewInt(1)
 var maxUint256 = uint256.MustFromHex("0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff")
 
 // Int
-// a wrapper around uint256.Int to support negative numbers
+// Fixed-size signed-magnitude math library with a 256-bit absolute value.
+//
+// Values are represented as a 256-bit absolute value plus a sign bit. This is
+// not Solidity/EVM int256 two's-complement arithmetic.
 type Int struct {
 	abs uint256.Int
 	neg bool
@@ -213,7 +225,10 @@ func hasLowerBits(x *uint256.Int, n uint) bool {
 	if bits == 0 {
 		return false
 	}
-	return x[words]&(uint64(1)<<bits-1) != 0
+
+	mask := (uint64(1) << bits) - 1
+
+	return x[words]&mask != 0
 }
 
 // Quo sets z to the quotient x/y for y != 0 and returns z.

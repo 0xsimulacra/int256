@@ -1,8 +1,13 @@
 # int256
+Fixed-size signed-magnitude math library with a 256-bit absolute value.
 
-Wrap [uint256](https://github.com/holiman/uint256) fixed size 256-bit math library to allow perform with negative number.
+Wrap [uint256](https://github.com/holiman/uint256) fixed size 256-bit math library to allow perfoming operations  with negative number.
 
-Taken from [https://github.com/linhbkhn95/int256](https://github.com/linhbkhn95/int256) but with my own additions that I find usefull.
+Values are represented as a 256-bit absolute value plus a sign bit. 
+
+This is not Solidity/EVM int256 two's-complement arithmetic.
+
+
 # Example usage:
 
 ### Expanding a number to 18 decimals

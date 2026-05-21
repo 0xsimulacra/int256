@@ -1,3 +1,7 @@
+// Package int256: Fixed-size signed-magnitude math library with a 256-bit absolute value.
+// Copyright 2018-2020 uint256 Authors
+// Copyright (c) 2026 0xsimulacra
+// SPDX-License-Identifier: BSD-3-Clause
 package int256
 
 import (

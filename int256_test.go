@@ -1,3 +1,8 @@
+// Package int256: Fixed-size signed-magnitude math library with a 256-bit absolute value.
+// Copyright (c) 2023 Trịnh Đức Bảo Linh(Kevin)
+// Copyright 2018-2020 uint256 Authors
+// Copyright (c) 2026 0xsimulacra
+// SPDX-License-Identifier: MIT AND BSD-3-Clause
 package int256
 
 import (
@@ -641,30 +646,48 @@ func TestInt_Rsh(t *testing.T) {
 }
 
 func TestInt_RshMatchesBigInt(t *testing.T) {
-	values := []string{
-		"0",
-		"1",
-		"-1",
-		"2",
-		"-2",
-		"3",
-		"-3",
-		"10",
-		"-10",
-		"340282366920938463463374607431768211455",
-		"-340282366920938463463374607431768211455",
+	values := []*Int{
+		NewInt(0),
+		NewInt(1),
+		NewInt(-1),
+		NewInt(2),
+		NewInt(-2),
+		NewInt(3),
+		NewInt(-3),
+		NewInt(10),
+		NewInt(-10),
 	}
-	shifts := []uint{0, 1, 2, 63, 64, 65, 127, 128, 129, 191, 192, 193, 255, 256, 300}
 
-	for _, value := range values {
-		x := MustFromDecimal(value)
+	for _, bit := range []uint{1, 2, 63, 64, 65, 127, 128, 129, 191, 192, 193, 255} {
+		pow := new(big.Int).Lsh(big.NewInt(1), bit)
+		powMinusOne := new(big.Int).Sub(new(big.Int).Set(pow), big.NewInt(1))
+		powPlusOne := new(big.Int).Add(new(big.Int).Set(pow), big.NewInt(1))
+		for _, x := range []*big.Int{powMinusOne, pow, powPlusOne} {
+			values = append(values, MustFromBig(x))
+			values = append(values, MustFromBig(new(big.Int).Neg(x)))
+		}
+	}
+
+	maxUint := new(big.Int).Sub(new(big.Int).Lsh(big.NewInt(1), 256), big.NewInt(1))
+	values = append(values, MustFromBig(maxUint))
+	values = append(values, MustFromBig(new(big.Int).Neg(maxUint)))
+
+	shifts := []uint{0, 1, 2, 3, 63, 64, 65, 127, 128, 129, 191, 192, 193, 254, 255, 256, 257, 300}
+
+	for _, x := range values {
 		xBig := x.ToBig()
 		for _, shift := range shifts {
-			t.Run(fmt.Sprintf("%s>>%d", value, shift), func(t *testing.T) {
+			t.Run(fmt.Sprintf("%s>>%d", xBig, shift), func(t *testing.T) {
 				got := new(Int).Rsh(x, shift)
 				want := MustFromBig(new(big.Int).Rsh(new(big.Int).Set(xBig), shift))
 				if !reflect.DeepEqual(got, want) {
 					t.Fatalf("Rsh() = %v, want %v", got, want)
+				}
+
+				gotAlias := x.Clone()
+				gotAlias.Rsh(gotAlias, shift)
+				if !reflect.DeepEqual(gotAlias, want) {
+					t.Fatalf("alias Rsh() = %v, want %v", gotAlias, want)
 				}
 			})
 		}
