@@ -1,10 +1,10 @@
 # Third-party notices
 
-This project contains code derived from or inspired by the following projects.
+This project contains code forked from, copied from, or derived from the following projects.
 
 ## linhbkhn95/int256
 
-Source: github.com/linhbkhn95/int256  
+Source: https://github.com/linhbkhn95/int256
 License: MIT
 
 MIT License
@@ -31,7 +31,7 @@ SOFTWARE.
 
 ## holiman/uint256
 
-Source: github.com/holiman/uint256  
+Source: https://github.com/holiman/uint256
 License: BSD-3-Clause
 
 BSD 3-Clause License

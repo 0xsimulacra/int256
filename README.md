@@ -127,3 +127,9 @@ func main() {
     }
 }
 ```
+
+## License
+
+This project is licensed under the BSD-3-Clause license.
+
+Portions are derived from linhbkhn95/int256, licensed under MIT, and holiman/uint256, licensed under BSD-3-Clause. See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
