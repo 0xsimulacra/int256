@@ -401,8 +401,12 @@ func (z *Int) exp(x, y, m *Int) *Int {
 	if m != nil {
 		mBigInt = m.ToBig()
 	}
-	big := new(big.Int).Exp(x.ToBig(), y.ToBig(), mBigInt)
-	z, _ = FromBig(big)
+	var iBig big.Int
+	if iBig.Exp(x.ToBig(), y.ToBig(), mBigInt) == nil {
+		return nil
+	}
+	result, _ := FromBig(&iBig)
+	*z = *result
 	return z
 }
 

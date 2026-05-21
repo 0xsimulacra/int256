@@ -8,6 +8,7 @@ package int256
 import (
 	"fmt"
 	"math/big"
+	"math/rand"
 	"reflect"
 	"testing"
 
@@ -1064,6 +1065,137 @@ func TestInt_ExpOptimizedPathsMatchBig(t *testing.T) {
 				t.Fatalf("Exp() = %v, want %v", got, want)
 			}
 		})
+	}
+}
+
+func TestInt_ModifiedOpsRandomizedMatchBig(t *testing.T) {
+	rng := rand.New(rand.NewSource(0x1A2B3C4D))
+	shifts := []uint{0, 1, 2, 3, 7, 31, 63, 64, 65, 95, 127, 128, 129, 159, 191, 192, 193, 223, 254, 255, 256, 257, 300}
+
+	for i := 0; i < 256; i++ {
+		xBig := randomSignedInt256(rng)
+		yBig := randomSignedInt256(rng)
+		x := MustFromBig(xBig)
+		y := MustFromBig(yBig)
+
+		assertBigOpResult(t, "Or", func() *Int { return new(Int).Or(x, y) }, new(big.Int).Or(new(big.Int).Set(xBig), yBig))
+		assertBigOpResult(t, "And", func() *Int { return new(Int).And(x, y) }, new(big.Int).And(new(big.Int).Set(xBig), yBig))
+
+		gotAliasX := x.Clone()
+		assertBigOpResult(t, "alias x Or", func() *Int { return gotAliasX.Or(gotAliasX, y) }, new(big.Int).Or(new(big.Int).Set(xBig), yBig))
+
+		gotAliasY := y.Clone()
+		assertBigOpResult(t, "alias y And", func() *Int { return gotAliasY.And(x, gotAliasY) }, new(big.Int).And(new(big.Int).Set(xBig), yBig))
+
+		for _, shift := range shifts {
+			assertBigOpResult(t, fmt.Sprintf("Rsh/%d", shift), func() *Int {
+				return new(Int).Rsh(x, shift)
+			}, new(big.Int).Rsh(new(big.Int).Set(xBig), shift))
+
+			assertBigOpResult(t, fmt.Sprintf("Lsh/%d", shift), func() *Int {
+				return new(Int).Lsh(x, shift)
+			}, new(big.Int).Lsh(new(big.Int).Set(xBig), shift))
+		}
+	}
+}
+
+func TestInt_ExpRandomizedMatchesBig(t *testing.T) {
+	rng := rand.New(rand.NewSource(0x5EED1234))
+
+	for i := 0; i < 256; i++ {
+		xBig := big.NewInt(rng.Int63n(41) - 20)
+		yBig := big.NewInt(rng.Int63n(32))
+		modChoice := rng.Intn(5)
+
+		var mBig *big.Int
+		switch modChoice {
+		case 0:
+			mBig = nil
+		case 1:
+			mBig = new(big.Int)
+		case 2:
+			mBig = big.NewInt(rng.Int63n(1<<32-1) + 1)
+		case 3:
+			mBig = new(big.Int).SetUint64(rng.Uint64() | 1<<40)
+		default:
+			mBig = new(big.Int).Neg(new(big.Int).SetUint64(rng.Uint64() | 1))
+		}
+
+		x := MustFromBig(xBig)
+		y := MustFromBig(yBig)
+		var m *Int
+		if mBig != nil {
+			m = MustFromBig(mBig)
+		}
+
+		wantBig := new(big.Int).Exp(new(big.Int).Set(xBig), new(big.Int).Set(yBig), mBig)
+		want := MustFromBig(wantBig)
+
+		got := new(Int).Exp(x, y, m)
+		if !reflect.DeepEqual(got, want) {
+			t.Fatalf("Exp(%s, %s, %v) = %v, want %v", xBig, yBig, mBig, got, want)
+		}
+
+		gotAlias := x.Clone()
+		gotAlias.Exp(gotAlias, y, m)
+		if !reflect.DeepEqual(gotAlias, want) {
+			t.Fatalf("alias Exp(%s, %s, %v) = %v, want %v", xBig, yBig, mBig, gotAlias, want)
+		}
+	}
+}
+
+func TestInt_ExpNegativeExponentMutatesReceiver(t *testing.T) {
+	z := NewInt(123)
+	got := z.Exp(NewInt(2), NewInt(-1), NewInt(5))
+	want := NewInt(3)
+
+	if got != z {
+		t.Fatalf("Exp() returned %p, want receiver %p", got, z)
+	}
+	if !reflect.DeepEqual(z, want) {
+		t.Fatalf("receiver after Exp() = %v, want %v", z, want)
+	}
+}
+
+func TestInt_ExpNegativeExponentNotInvertibleLeavesReceiver(t *testing.T) {
+	z := NewInt(123)
+	want := z.Clone()
+
+	got := z.Exp(NewInt(2), NewInt(-1), NewInt(4))
+	if got != nil {
+		t.Fatalf("Exp() = %v, want nil", got)
+	}
+	if !reflect.DeepEqual(z, want) {
+		t.Fatalf("receiver after failed Exp() = %v, want %v", z, want)
+	}
+}
+
+func randomSignedInt256(rng *rand.Rand) *big.Int {
+	z := new(big.Int)
+	for i := 0; i < 4; i++ {
+		z.Lsh(z, 64)
+		z.Or(z, new(big.Int).SetUint64(rng.Uint64()))
+	}
+	if rng.Intn(2) == 0 {
+		z.Neg(z)
+	}
+	return z
+}
+
+func assertBigOpResult(t *testing.T, name string, op func() *Int, wantBig *big.Int) {
+	t.Helper()
+
+	want, overflow := FromBig(wantBig)
+	if overflow {
+		if !causesPanic(func() { op() }) {
+			t.Fatalf("%s should panic for result %s", name, wantBig)
+		}
+		return
+	}
+
+	got := op()
+	if !reflect.DeepEqual(got, want) {
+		t.Fatalf("%s = %v, want %v", name, got, want)
 	}
 }
 
