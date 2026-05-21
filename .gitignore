@@ -20,3 +20,11 @@ testdata/fuzz
 # IDE related
 .vscode
 .idea
+
+# env
+.env*
+!.envrc
+
+# direnv
+.direnv
+

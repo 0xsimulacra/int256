@@ -1,0 +1,61 @@
+# Prject and sub project related
+node_modules
+data/downloads
+data/output
+data/tmp
+cache
+.env
+.env.secret
+*log.txt
+logs
+
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+benchz/bin
+
+# Test binary, built with `go test -c`
+*.test
+
+# fuzz test output folder
+*testdata/fuzz
+
+# IDE
+.idea
+.vscode
+
+# Output data
+data/output/
+
+# debug
+*.prof
+
+# imgs
+*.png
+
+# python env
+venv
+
+# some stuff
+notes/docs
+
+# logs
+.logs/
+
+# data
+searcher/data/downloads
+searcher/data/output
+searcher/dbz
+
+# env files
+.env*
+!.envrc
+
+# nix direnv
+.direnv/
+
+# julia
+.julia/
