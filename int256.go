@@ -1,8 +1,4 @@
-// Package int256: Fixed-size signed-magnitude math library with a 256-bit absolute value.
-//
-// Values are represented as a 256-bit absolute value plus a sign bit. This is
-// not Solidity/EVM int256 two's-complement arithmetic.
-//
+// Package int256: Fixed-size signed integer math library represented as a 256-bit absolute value plus a sign bit.
 // Copyright (c) 2023 Trịnh Đức Bảo Linh(Kevin)
 // Copyright 2018-2020 uint256 Authors
 // Copyright (c) 2026 0xsimulacra
@@ -17,10 +13,10 @@ import (
 )
 
 // Int
-// Fixed-size signed-magnitude math library with a 256-bit absolute value.
+// Fixed-size signed integer math library represented as a 256-bit absolute value plus a sign bit.
 //
-// Values are represented as a 256-bit absolute value plus a sign bit. This is
-// not Solidity/EVM int256 two's-complement arithmetic.
+// This is not Solidity/EVM int256 two's-complement arithmetic: bit 255 is not the sign bit,
+// values are not interpreted as 256-bit EVM words, and the sign is stored separately in neg.
 type Int struct {
 	abs uint256.Int
 	neg bool

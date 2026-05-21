@@ -1,4 +1,4 @@
-// Package int256: Fixed-size signed-magnitude math library with a 256-bit absolute value.
+// Package int256: Fixed-size signed integer math library represented as a 256-bit absolute value plus a sign bit.
 // Copyright (c) 2023 Trịnh Đức Bảo Linh(Kevin)
 // Copyright 2018-2020 uint256 Authors
 // Copyright (c) 2026 0xsimulacra
@@ -1078,14 +1078,18 @@ func TestInt_ModifiedOpsRandomizedMatchBig(t *testing.T) {
 		x := MustFromBig(xBig)
 		y := MustFromBig(yBig)
 
-		assertBigOpResult(t, "Or", func() *Int { return new(Int).Or(x, y) }, new(big.Int).Or(new(big.Int).Set(xBig), yBig))
-		assertBigOpResult(t, "And", func() *Int { return new(Int).And(x, y) }, new(big.Int).And(new(big.Int).Set(xBig), yBig))
+		assertBigOpResult(t, "Or", func() *Int { return new(Int).Or(x, y) },
+			new(big.Int).Or(new(big.Int).Set(xBig), yBig))
+		assertBigOpResult(t, "And", func() *Int { return new(Int).And(x, y) },
+			new(big.Int).And(new(big.Int).Set(xBig), yBig))
 
 		gotAliasX := x.Clone()
-		assertBigOpResult(t, "alias x Or", func() *Int { return gotAliasX.Or(gotAliasX, y) }, new(big.Int).Or(new(big.Int).Set(xBig), yBig))
+		assertBigOpResult(t, "alias x Or", func() *Int { return gotAliasX.Or(gotAliasX, y) },
+			new(big.Int).Or(new(big.Int).Set(xBig), yBig))
 
 		gotAliasY := y.Clone()
-		assertBigOpResult(t, "alias y And", func() *Int { return gotAliasY.And(x, gotAliasY) }, new(big.Int).And(new(big.Int).Set(xBig), yBig))
+		assertBigOpResult(t, "alias y And", func() *Int { return gotAliasY.And(x, gotAliasY) },
+			new(big.Int).And(new(big.Int).Set(xBig), yBig))
 
 		for _, shift := range shifts {
 			assertBigOpResult(t, fmt.Sprintf("Rsh/%d", shift), func() *Int {

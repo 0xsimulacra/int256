@@ -1,4 +1,4 @@
-// Package int256: Fixed-size signed-magnitude math library with a 256-bit absolute value.
+// Package int256: Fixed-size signed integer math library represented as a 256-bit absolute value plus a sign bit.
 // Copyright (c) 2023 Trịnh Đức Bảo Linh(Kevin)
 // Copyright (c) 2026 0xsimulacra
 // SPDX-License-Identifier: MIT AND BSD-3-Clause

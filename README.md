@@ -1,12 +1,21 @@
 # int256
-Fixed-size signed-magnitude math library with a 256-bit absolute value.
 
-Wrap [uint256](https://github.com/holiman/uint256) fixed size 256-bit math library to allow perfoming operations  with negative number.
+Fixed-size signed integer math library represented as a 256-bit absolute value plus a sign bit.
 
-Values are represented as a 256-bit absolute value plus a sign bit. 
+This package wraps [uint256](https://github.com/holiman/uint256) to support arithmetic on negative values while keeping a fixed-size 256-bit magnitude.
 
-This is not Solidity/EVM int256 two's-complement arithmetic.
+Values are stored in signed-magnitude form:
 
+```go
+type Int struct {
+    abs uint256.Int
+    neg bool
+}
+```
+
+Operations are defined on the signed integer value. Bitwise operations and arithmetic right shift follow math/big signed integer semantics, not raw bitwise operations on abs.
+
+This is not Solidity/EVM int256 two's-complement arithmetic: bit 255 is not the sign bit, values are not interpreted as 256-bit EVM words, and the sign is stored separately in neg.
 
 # Example usage:
 
