@@ -4,9 +4,6 @@
 
 # Third-party authors / upstream copyright holders
 
-## Portions derived from linhbkhn95/int256:
-- Trịnh Đức Bảo Linh(Kevin)
-
 ## Portions derived from holiman/uint256:
 This is the official list of uint256 authors for copyright purposes:
 
@@ -17,3 +14,6 @@ This is the official list of uint256 authors for copyright purposes:
 - Yao Zengzeng <yaozengzeng@zju.edu.cn>
 - Dag Arne Osvik <daosvik@users.noreply.github.com>
 - Thanee Charattrakool <planxthanee@gmail.com>
+
+## Portions derived from linhbkhn95/int256:
+- Trịnh Đức Bảo Linh(Kevin)

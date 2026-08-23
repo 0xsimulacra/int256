@@ -1,6 +1,6 @@
 // Package int256: Fixed-size signed integer math library represented as a 256-bit absolute value plus a sign bit.
-// Copyright (c) 2023 Trịnh Đức Bảo Linh(Kevin)
 // Copyright 2018-2020 uint256 Authors
+// Copyright (c) 2023 Trịnh Đức Bảo Linh(Kevin)
 // Copyright (c) 2026 0xsimulacra
 // SPDX-License-Identifier: MIT AND BSD-3-Clause
 package int256
@@ -438,7 +438,7 @@ func TestInt_SetString(t *testing.T) {
 	}
 	big1, _ := new(big.Int).SetString("-10a", 16)
 
-	var MaxUint256, _ = new(big.Int).SetString("ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff", 16)
+	MaxUint256, _ := new(big.Int).SetString("ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff", 16)
 
 	big, _ := new(big.Int).SetString("1461446703485210103287273052203988822378723970342", 10)
 

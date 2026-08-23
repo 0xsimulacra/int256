@@ -1,46 +1,43 @@
 {
   description = "Go dev shell (gopls, delve, gotools) with CGO + direnv";
 
-  inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixos-25.11";
-  inputs.nixpkgs-unstable.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
+  inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
   inputs.systems.url = "github:nix-systems/default";
   inputs.flake-utils = {
     url = "github:numtide/flake-utils";
     inputs.systems.follows = "systems";
   };
-  inputs.foundry.url = "github:shazow/foundry.nix/stable";
 
   outputs =
-    { nixpkgs, nixpkgs-unstable, flake-utils, foundry, ... }:
+    {
+      nixpkgs,
+      flake-utils,
+      ...
+    }:
     flake-utils.lib.eachDefaultSystem (
       system:
       let
         pkgs = import nixpkgs {
           inherit system;
-          overlays = [ foundry.overlay ];
         };
 
-        pkgsUnstable = import nixpkgs-unstable {
-          inherit system;
-        };
+        _pkgGo = pkgs.go_1_27;
+        _pkgGoModule = pkgs.buildGo126Module;
 
-        _pkgGo = pkgsUnstable.go_1_26;
-        _pkgGoModule = pkgsUnstable.buildGo126Module;
-
-        _pkgGopls = pkgsUnstable.gopls.override {
+        _pkgGopls = pkgs.gopls.override {
           buildGoLatestModule = _pkgGoModule;
         };
 
-        _pkgGoDelve = pkgsUnstable.delve.override {
+        _pkgGoDelve = pkgs.delve.override {
           buildGoModule = _pkgGoModule;
         };
 
-        _pkgGoTools = pkgsUnstable.gotools.override {
+        _pkgGoTools = pkgs.gotools.override {
           buildGoModule = _pkgGoModule;
           go = _pkgGo;
         };
 
-        _pkgGoPerf = pkgsUnstable.goperf.override {
+        _pkgGoPerf = pkgs.goperf.override {
           buildGoModule = _pkgGoModule;
         };
 
@@ -71,9 +68,7 @@
             pkgs.sqlite
           ];
 
-          packages = [
-            pkgs.foundry-bin
-          ];
+          packages = [ ];
 
           GOOS = "linux";
           GOARCH = "amd64";
@@ -88,9 +83,7 @@
           ];
 
           shellHook = ''
-            go telemetry off
-
-            echo "Go $(go version) • Telemetry=$(go telemetry 2>/dev/null || echo n/a) • CGO=$CGO_ENABLED"
+            echo "Go $(go version) • CGO=$CGO_ENABLED"
           '';
 
           # macOS note (harmless on Linux): uncomment if you ever build Security-dependent CGO code
